@@ -204,3 +204,8 @@ var foo = (function CoolModule() {
 
 如果只需要实例化一次，可以使用以上代码。
 
+# 第六章：this
+
+this指向函数自身
+
+this指向函数作用域

@@ -111,7 +111,32 @@ setTimeout(data.foo,100);// 3   这里是将方法赋给了setTimeout的回调�
 
 这就是本文开始的那个题目。所谓传参丢失，就是在将包含this的函数作为参数在函数中传递时，this指向改变。
 
+### 1.3.间接引用
 
+间接引用是指一个定义对象的方法引用另一个对象存在的方法，这种情况下会使得this指向window：
+
+```js
+function thisTo(){
+   console.log(this.a);
+}
+var data={
+  a:2,
+  foo:thisTo
+};
+var newData={
+  a:3
+}
+var a=4;
+data.foo(); //2
+(newData.foo=data.foo)() //4
+newData.foo();  //3
+```
+
+
+
+​		这里为什么(newData.foo=data.foo)()的结果是4，与newData.foo()的结果不一样呢？按照正常逻辑的思路，应该是先对newData.foo赋值，再对其进行调用，也就是等价于这样的写法：newData.foo=data.foo;newData.foo();然而这两句的输出结果就是3，这说明两者不等价。
+
+​		接着，当我们console.log(newData.foo=data.foo)的时候，发现打印的是thisTo这个函数，函数后立即执行括号将函数执行。这句话中，立即执行括号前的括号中的内容可单独看做一部本，该部分虽然完成了赋值操作，返回值却是一个函数，该函数没有确切的调用者，故而立即执行的时候，其调用对象不是newData，而是window。下一句的newData.foo()是在给newData添加了foo属性后，再对其调用foo()，注意这次的调用对象为newData，即我们上面说的隐式绑定的this，结果就为3。
 
 # 4解决
 
@@ -182,29 +207,3 @@ thisTo.call(obj); //2
 
 相当于闭包，setTimeout的回调方法可以访问thisTo函数作用域下的所有属性。
 
-## 3.间接引用
-
-间接引用是指一个定义对象的方法引用另一个对象存在的方法，这种情况下会使得this指向window：
-
-```js
-function thisTo(){
-   console.log(this.a);
-}
-var data={
-  a:2,
-  foo:thisTo
-};
-var newData={
-  a:3
-}
-var a=4;
-data.foo(); //2
-(newData.foo=data.foo)() //4
-newData.foo();  //3
-```
-
-
-
-​		这里为什么(newData.foo=data.foo)()的结果是4，与newData.foo()的结果不一样呢？按照正常逻辑的思路，应该是先对newData.foo赋值，再对其进行调用，也就是等价于这样的写法：newData.foo=data.foo;newData.foo();然而这两句的输出结果就是3，这说明两者不等价。
-
-​		接着，当我们console.log(newData.foo=data.foo)的时候，发现打印的是thisTo这个函数，函数后立即执行括号将函数执行。这句话中，立即执行括号前的括号中的内容可单独看做一部本，该部分虽然完成了赋值操作，返回值却是一个函数，该函数没有确切的调用者，故而立即执行的时候，其调用对象不是newData，而是window。下一句的newData.foo()是在给newData添加了foo属性后，再对其调用foo()，注意这次的调用对象为newData，即我们上面说的隐式绑定的this，结果就为3。
