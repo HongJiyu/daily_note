@@ -29,6 +29,8 @@ var a=0;
 
 # 第二章：词法作用域
 
+词法作用域就是定义在词法阶段的作用域。换句话说，词法作用域是由你在写代码时将变量和块作用域写在哪里来决定的，因此当词法分析器处理代码时会保持作用域 不变。
+
 词法作用域也就是静态作用域。在执行前，作用域就已经确定了。在编译期就会创建并存放了该作用域下的变量。
 
 动态作用域：在执行的时候才会去确定作用域。
@@ -90,7 +92,7 @@ foo();
 
 ​		函数声明：Function fun(){ } ，可以将代码隐藏到该作用域下，但是会污染包含这个方法的作用域。因为fun变量名被使用了。
 
-​		函数表达式：(Function fun(){})()   可以将代码隐藏到该作用域下，同时fun变量名是在变量自身作用域下，不会污染上一级的作用域。包含方法的()：使函数变为一个表达式，最后的()：执行这个函数。
+​		函数表达式：(Function fun(){})()   可以将代码隐藏到该作用域下，同时fun变量名是在变量自身作用域下，不会污染上一级的作用域。包含方法的()：使函数变为一个表达式，最后的()：执行这个函数。 **var tmp=function (){} 也是函数表达式**
 
 两种写法：(Function fun(){})()  或者 (Function fun(){}())
 
@@ -160,7 +162,7 @@ wait( "Hello, closure!" );
 
 ​		闭包，就是一个函数持有了它外部作用域的访问权。
 
-	## 利用闭包做到模块化
+## 利用闭包做到模块化
 
 模块模式需要具备两个必要条件。
 
@@ -225,7 +227,7 @@ foo(){
 1. 函数是否在 new 中调用（new 绑定）？如果是的话 this 绑定的是新创建的对象。 var bar = new foo()
 2. 函数是否通过 call、apply、bind（显式绑定）？如果是的话，this 绑定的是 指定的对象。 var bar = foo.call(obj2)
 3. 函数是否在某个上下文对象中调用（隐式绑定）？如果是的话，this 绑定的是那个上 下文对象。 var bar = obj1.foo()
-4. 如果都不是的话，使用默认绑定。**如果在严格模式下，就绑定到 undefined**，否则绑定到 全局对象。 var bar = foo()
+4. 如果都不是的话，使用默认绑定。**如果在严格模式下，就绑定到 undefined**，非严格模式下绑定到 全局对象。 var bar = foo()
 
 
 
@@ -495,6 +497,7 @@ var myObject = {};
  
 Object.defineProperty( 
     myObject, "a", {     
+        value:100,
         writable: false, // 修改为不可写！     
         configurable: true,     
         enumerable: true 
@@ -502,6 +505,7 @@ Object.defineProperty(
 ); 
 
 Object.defineProperty( myObject, "a", {     
+    value:10,
     writable: true,     
     configurable: false, // 不可配置！  delete myObject.a;  删除会失败，重新defineProperty也会报错。
     enumerable: true 
@@ -512,7 +516,250 @@ Object.defineProperty( myObject, "a", {
 
 ### 不变性
 
+#### 1.对象常量
 
+结合 writable:false 和 configurable:false 就可以创建一个真正的常量属性（不可修改、 重定义或者删除）
+
+```js
+var myObject = {}; 
+ Object.defineProperty( 
+     myObject, "FAVORITE_NUMBER", 
+     {     
+         value: 42,     
+      	 writable: false,     
+      	 configurable: false  
+     } );
+
+```
+
+#### 2.禁止扩展
+
+如果你想禁止一个对象添加新属性并且保留已有属性，可以使用 
+
+```js
+Object.prevent Extensions(..)：
+var myObject = {      a:2 }; 
+Object.preventExtensions( myObject ); 
+myObject.b = 3;  
+myObject.b; // undefined
+```
+
+在非严格模式下，创建属性 b 会静默失败。在严格模式下，将会抛出 TypeError 错误。
+
+#### 3.密封
+
+​		Object.seal(..) 会创建一个“密封”的对象，这个方法实际上会在一个现有对象上调用 Object.preventExtensions(..) 并把所有现有属性标记为 configurable:false。所以，密封之后不仅不能添加新属性，也不能重新配置或者删除任何现有属性（虽然可以 修改属性的值）。
+
+#### 4.冻结
+
+​		Object.freeze(..) 会创建一个冻结对象，这个方法实际上会在一个现有对象上调用 Object.seal(..) 并把所有“数据访问”属性标记为writable:false，这样就无法修改它们 的值。
+
+### [[Get]]
+
+访问属性，如果属性不存在，结果是undefined。
+
+访问属性，如果属性的值是undefined，那么结果也是undefined。
+
+访问变量，如果变量不存在，会报错。
+
+```js
+var myObject = {      a: undefined }; 
+ 
+myObject.a; // undefined  
+ 
+myObject.b; // undefined
+
+console.log(a); //ReferenceError: a is not defined
+```
+
+首先在对象中查找是否有名称相同的属性， 如果找到就会返回这个属性的值。
+
+如果没有找到名称相同的属性，按照 [[Get]] 算法的定义会执行另外一种非常重要 的行为（其实就是遍历可能存在的 [[Prototype]] 链， 也就是原型链）。
+
+如果无论如何都没有找到名称相同的属性，那 [[Get]] 操作会返回值 undefined。
+
+如何区分属性不存在和属性值为undefined。
+
+### [[Put]]
+
+如果已经存在这个属性，[[Put]] 算法大致会检查下面这些内容。
+1. 属性是否是访问描述符？如果是并且存在 setter 就调用 setter。 
+2.  属性的数据描述符中 writable 是否是 false ？如果是，在非严格模式下静默失败，在 严格模式下抛出 TypeError 异常。 
+3. 如果都不是，将该值设置为属性的值。
+
+如果对象中不存在这个属性，[[Put]] 操作会更加复杂。
+
+### Getter/Setter
+
+obj.a  会调用get a(){return xx} 方法。
+
+obj.a="xx" 会调用set a(val){}方法。
+
+```js
+var myObject = {
+    // 给 a 定义一个 getter     
+    get a() { return this.a1; },
+
+    // 给 a 定义一个 setter     
+    set a(val) { this.a1 = val * 2; }
+};
+
+myObject.a = 2;
+
+console.log(myObject.a);
+
+```
+
+这里是将值存储在a1中。  **好大的疑惑！！！**
+
+
+
+### 存在性
+
+```js
+var myObject = {      a:2 }; 
+ 
+("a" in myObject); // true 
+("b" in myObject); // false  
+ 
+myObject.hasOwnProperty( "a" ); // true 
+myObject.hasOwnProperty( "b" ); // false
+```
+
+in 操作符会检查属性名是否在对象及其 [[Prototype]] 原型链中
+
+ hasOwnProperty(..) 只会检查属性名是否在 myObject 对象中，不会检查 [[Prototype]] 链。 
+
+
+
+所有的普通对象都可以通过对于 Object.prototype 的委托来访问 hasOwnProperty(..)，但是有的对象可能没有连接到 
+
+Object.prototype。在这种情况下，形如 myObejct.hasOwnProperty(..) 就会失败。
+
+使用`Object.prototype.hasOwnProperty. call(myObject,"a")`
+
+**存在但不一定会被枚举出来**
+
+在属性描述时，设置了它的可枚举为false。
+
+```js
+var myObject = { }; 
+ 
+Object.defineProperty(     myObject,     "a",     // 让 a 像普通属性一样可以枚举     
+                      { enumerable: true, value: 2 } ); 
+ 
+Object.defineProperty(     myObject,     "b",     // 让 b 不可枚举     
+                      { enumerable: false, value: 3 } ); 
+ 
+myObject.b; // 3 
+("b" in myObject); // true  
+myObject.hasOwnProperty( "b" ); // true 
+ 
+// ....... 
+ 
+for (var k in myObject) {      
+    console.log( k, myObject[k] ); 
+} // "a" 2
+
+myObject.propertyIsEnumerable( "b" ); // false
+Object.keys( myObject ); // ["a"]  Object.keys(..) 会返回一个数组，包含所有可枚举属性
+Object.getOwnPropertyNames( myObject ); // ["a", "b"] 会返回一个数组，包含所有属性，无论它们是否可枚举。
+
+```
+
+​		如上，使用了defineProperty为myObject定义了两个属性，分是a、b。不过设置b不可枚举。通过in和HasOwnProperty可以判断出b是存在的。但是使用for in 进行枚举时，只能枚举出a。
+
+
+
+**注意：**
+
+​		在数组上应用 for..in 循环有时会产生出人意料的结果，**因为这种枚举不仅会包含所有数值索引，还会包含所有可枚举属性（包括原型链）。**最好只在对象上应用 for..in 循环，如果要遍历数组就使用传统的 for 循环来遍历数值索引。
+
+
+
+## 遍历
+
+目前没有内置的方法可以获取 对象本身的属性以 及 [[Prototype]] 链中的所有属性 。不过你可以递归遍历某个对象的整条 [[Prototype]] 链并保存每一层中使用 Object.keys(..) 得到的属性列表——只包含可枚举属性。
+
+for..in 循环可以用来遍历对象的可枚举属性列表（包括 [[Prototype]] 链）。
+
+```js
+var myArray = [1, 2, 3]; 
+ 
+for (var i = 0; i < myArray.length; i++) {      
+    console.log( myArray[i] ); 
+} // 1 2 3
+```
+
+以上的代码其实只是通过遍历数组的下标来获取下标指向的值。
+
+ES6 增加了一种用来遍 历数组的 for..of 循环语法。
+
+```js
+var myArray = [11, 20, 33];
+
+for (var v of myArray) { console.log(v); } 
+```
+
+​		for..of 循环首先会向被访问对象请求一个迭代器对象，然后通过调用迭代器对象的 next() 方法来遍历所有返回值。数组有内置的 @@iterator，因此 for..of 可以直接应用在数组上。
+
+```js
+var myArray = [ 1, 2, 3 ]; 
+var it = myArray[Symbol.iterator](); 
+ 
+it.next(); // { value:1, done:false }  
+it.next(); // { value:2, done:false }  
+it.next(); // { value:3, done:false }  
+it.next(); // { done:true }
+
+```
+
+​		引用类似 iterator 的特殊属性时要使用符号名，而不是符号包含的值。此外，虽然看起来很像一个对象，但是 @@iterator 本身并不是一个迭代 器对象，而是一个返回迭代器对象的函数
+
+
+
+# 第八章：混合对象“类”
+
+
+
+# 第九章：原型
+
+JavaScript 中的对象有一个特殊的 [[Prototype]] 内置属性，其实就是对于其他对象的引 用。几乎所有的对象在创建时 [[Prototype]] 属性都会被赋予一个非空的值。
+
+在前面讲到引用对象的属性时，出发[[Get]]，如果对象不存在这个属性，会去看看它的原型是否存在这个属性。
+
+```js
+var anotherObject = {      a:2 }; 
+ 
+// 创建一个关联到 anotherObject 的对象 
+var myObject = Object.create( anotherObject );  
+ 
+myObject.a; // 2
+
+```
+
+创建了myObject，并将myObject的原型指向了anotherObject。显然，在myObject找不到a，但是在anotherObject找到了。如果 anotherObject 中也找不到 a 并且 [[Prototype]] 链不为空的话，就会继续查找下去。
+
+
+
+```js
+var anotherObject = {      a:2 }; 
+// 创建一个关联到 anotherObject 的对象 
+var myObject = Object.create( anotherObject ); 
+for (var k in myObject) {      
+    console.log("found: " + k); 
+} // found: a
+("a" in myObject); // true
+```
+
+for in会去遍历对象的原型链上的属性，同时in操作符也会去查找原型链。
+
+查找到最终，会访问到这个 Object.prototype 对象。
+
+## Object.prototype
+
+​		所有普通的 [[Prototype]] 链最终都会指向内置的 Object.prototype。由于所有的“普通” （内置，不是特定主机的扩展）对象都“源于”这个 Object.prototype 对象，所以它包含 JavaScript 中许多通用的功能。
+​		比如说 .toString() 和 .valueOf()， .hasOwnProperty(..), .isPrototypeOf(..)。
 
 
 
