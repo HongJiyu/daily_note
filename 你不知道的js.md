@@ -206,6 +206,315 @@ var foo = (function CoolModule() {
 
 # 第六章：this
 
-this指向函数自身
+this 的绑定和函数声明的位置没有任何关系，只取决于函数的调用方式。
 
-this指向函数作用域
+也就是包含this的函数，这个函数声明在对象里面，它也不属于这个对象，具体this的指向是看这个函数被如何调用。
+
+具体分析看另一篇文章：this绑定与丢失。
+
+**具体流程：**
+
+foo是一个函数。
+
+```js
+foo(){
+    console.log(this.a);
+}
+```
+
+1. 函数是否在 new 中调用（new 绑定）？如果是的话 this 绑定的是新创建的对象。 var bar = new foo()
+2. 函数是否通过 call、apply、bind（显式绑定）？如果是的话，this 绑定的是 指定的对象。 var bar = foo.call(obj2)
+3. 函数是否在某个上下文对象中调用（隐式绑定）？如果是的话，this 绑定的是那个上 下文对象。 var bar = obj1.foo()
+4. 如果都不是的话，使用默认绑定。**如果在严格模式下，就绑定到 undefined**，否则绑定到 全局对象。 var bar = foo()
+
+
+
+## 不关心this时
+
+当不关心调用的函数，它this的指向时。
+
+在严格模式下，可以传入null或者是空对象（传入null，this指向的时undefined）
+
+在非严格模式下，最好传入空对象。（如果传入null，函数中的this指向了全局，进而更改了全局的变量。)
+
+空对象：Object.create(null) 和 {} 很像，但是并不会创建 Object. prototype 这个委托，所以它比 {}“更空”。
+
+## call、apply、bind
+
+三个都是显示绑定this对象。
+
+bind是返回一个绑定之后的函数，不会直接调用。
+
+```js
+let tmp=xw.say.bind(xh);   //将xw对象的say方法的this指向xh对象，并返回绑定后的say方法。
+tmp(xx,xx); //调用tmp方法,并传入两个参数。
+
+//上面的例子可以简化为这样。
+xw.say.bind(xh,xx,xx)();
+xw.say.bind(xh)(xx,xx);
+```
+
+apply方法是直接执行这个方法，而不是像bind返回一个绑定后的函数。所以apply方法需要传入绑定对象和参数。
+
+同时参数要求是以**数组**的形式传入。
+
+```js
+xw.say.apply(xh,["实验小学","六年级"]);
+```
+
+call方法和apply方法一样，不过传入的参数是展开的。
+
+```js
+xw.say.apply(xh,"实验小学","六年级");
+```
+
+
+
+# 第七章 对象
+
+对象可以通过两种形式定义：声明（文字）形式和构造形式。
+
+```js
+//对象的文字语法大概是这样：
+var myObj = {     
+    key: value     
+    // ... 
+};
+
+//构造形式大概是这样：
+var myObj = new Object(); 
+myObj.key = value;
+
+```
+
+
+
+js中有8中类型
+
+null、undefined、string、number、boolean、object、symbol、bigint
+
+​		
+
+​	ES6 中新增了一种 Symbol 。这种类型的对象永不相等，即使创建的时候传入相同的值，可以解决属性名冲突的问题，做为标记。
+
+```js
+var user = {
+    one: 1,
+    two: 2
+}
+var one = Symbol("one");
+user[one] = 3;  
+console.log(user); //{ one: 4, two: 2, [Symbol(one)]: 3 }
+```
+
+​		解决了当你引入一个对象，想要为这个对象增加属性时，为了避免因为定义了一样的变量名而覆盖了原有值，就可以使用Symbol，它永远是不一样的。
+
+
+
+​		谷歌67版本中还出现了一种 bigInt。是指安全存储、操作大整数。（但是很多人不把这个做为一个类型）
+
+
+
+基本类型：null、undefined、string、number、boolean
+
+Object ：其中包含了Data、function、Array等。这三种是常规用的。
+
+
+
+## 对象子类型
+
+JavaScript 中还有一些**对象子类型**，通常被称为内置对象。有些内置对象的名字看起来和 简单基础类型一样，不过实际上它们的关系更复杂，我们稍后会详细介绍。它们实际上只是一些内置函数。这些内置函数可以当作构造函数来使用，从而可以构造一个对应子类型的新对 象。
+
++ String
++ Number
++ Boolean
++ Object
++ Function
++ Array
++ Date
++ RegExp
++ Error
+
+```js
+var strPrimitive = "I am a string";  
+typeof strPrimitive; // "string"  
+strPrimitive instanceof String; // false 
+ 
+var strObject = new String( "I am a string" );  
+typeof strObject; // "object" 
+strObject instanceof String; // true 
+```
+
+​		原始值 "I am a string" 并不是一个对象，它只是一个字面量，并且是一个不可变的值。 如果要在这个字面量上执行一些操作，比如获取长度、访问其中某个字符等，那需要将其 转换为 String 对象。
+​		幸好，在必要时语言会自动把字符串字面量转换成一个 String 对象，也就是说你并不需要 显式创建一个对象。JavaScript 社区中的大多数人都认为能使用文字形式时就不要使用构 造形式。
+
+```js
+var strPrimitive = "I am a string"; 
+ 
+console.log( strPrimitive.length ); // 13 
+ 
+console.log( strPrimitive.charAt( 3 ) ); // "m"
+
+```
+
+
+
+**函数就是对象的一个子类型**（从技术角度来说就是“可调用的对象”）。JavaScript 中的函数是“一等公民”，因为它们本质上和普通的对象一样（只是可以调用），所以可以像操作 其他对象一样操作函数（比如当作另一个函数的参数）。
+
+数组也是对象的一种类型，具备一些额外的行为。数组中内容的组织方式比一般的对象要 稍微复杂一些。
+
+## 内容
+
+​		在引擎内部，这些值的存储方式是多种多样的，一般并不会存 在对象容器内部。存储在对象容器内部的是这些**属性的名称**，它们就像指针（从技术角度 来说就是引用）一样，指向这些值真正的存储位置。
+
+```js
+var myObject = {     a: 2 }; 
+ 
+myObject.a; // 2 
+ 
+myObject["a"]; // 2
+
+```
+
+可以通过`.`的方式访问，也可以通过["xx"]的方式访问属性。
+
+ . 操作符要求属性名满足标识符的命名规范，而 [".."] 语法 可以接受任意 UTF-8/Unicode 字符串作为属性名。
+
+举例来说，如果要引用属性名称为 **SuperFun!** 的属性，那就必须使用 ["Super-Fun!"] 语法访问，因为 Super-Fun! 并不是一个有效 的标识符属性名。所以不能通过`.Super-Fun!`来访问。
+
+
+
+​		**在对象中**，属性名永远都是字符串。如果你使用 string（字面量）以外的其他值作为属性名，那它首先会被转换为一个字符串。即使是数字也不例外。而数组下标中使用的的确是数字，所以当心不要搞混对象和数组中数字的用法（因为对象使用["xx"]的方式和使用数组很像）
+
+```js
+var myObject = { }; //这是一个对象
+ 
+myObject[true] = "foo";  
+myObject[3] = "bar";  
+myObject[myObject] = "baz"; 
+ 
+myObject["true"]; // "foo"  
+myObject["3"]; // "bar"  
+myObject["[object Object]"]; // "baz"
+
+```
+
+
+
+### 可计算属性名
+
+​	可以使用 myObject[prefix + name]。但是使用文字形式来声明对 象时这样做是不行的。ES6 增加了可计算属性名，可以在文字形式中使用 [] 包裹一个表达式来当作属性名：
+
+```js
+var prefix = "foo"; 
+
+var myObject = {     
+    [prefix + "bar"]:"hello",      
+    [prefix + "baz"]: "world" 
+}; 
+
+myObject["foobar"]; // hello 
+myObject["foobaz"]; // world
+```
+
+可计算属性名最常用的场景可能是 ES6 的符号（Symbol）
+
+### 方法、函数
+
+在其他语言中，属于对象（也被称为“类”）的函数通常 被称为“方法”。
+
+但是在js中，函数不属于任何一个对象，即使这个函数声明在对象中。
+
+因为 this 是在运行时根据调 用位置动态绑定的，所以函数和对象的关系最多也只能说是间接关系。
+
+### 数组
+
+数组也是对象，所以虽然每个下标都是整数，你仍然可以给数组添加属性：
+
+```js
+var myArray = [ "foo", 42, "bar" ];  
+
+myArray.baz = "baz";  
+
+myArray.length; // 3 
+
+myArray.baz; // "baz"
+```
+
+
+
+如果你试图向数组添加一个属性，但是属性名“看起来”像一个数字，那它会变成 一个数值下标（因此会修改数组的内容而不是添加一个属性）：
+
+```js
+var myArray = [ "foo", 42, "bar" ];  
+
+myArray["3"] = "baz";  
+
+myArray.length; // 4 
+
+myArray[3]; // "baz"
+```
+
+### 赋值
+
+基本都是浅复制。
+
+对于JavaScript的深复制(循环引用导致死循环)应当采用哪种方法作为标准呢？在很长一段时间里，这个问题都没有明确的答案。
+
+对于 JSON 安全（也就是说可以被序列化为一个 JSON 字符串并且可以根据这个字符串解 析出一个结构和值完全一样的对象）的对象来说，有一种巧妙的复制方法：
+```var newObj = JSON.parse( JSON.stringify( someObj ) );  ```
+
+当然，这种方法需要保证对象是 JSON 安全的，所以只适用于部分情况。
+
+### 属性描述符
+
+对象的属性除了有对应了值，还有一些权限。
+
+```js
+var myObject = {      a:2 }; 
+ 
+Object.getOwnPropertyDescriptor( myObject, "a" );
+// { 
+//    value: 2,    
+//    writable: true,可写 
+//    enumerable: true, 可枚举
+//    configurable: true 可配置
+// }
+```
+
+writable：改为false，那么无法修改a的值。
+
+configurable：改为false，那么无法修改属性描述符的其他属性，而且是不可逆。也不能使用delete删除这个属性。
+
+enumerable：属性是否会出现在对象的属性枚举中，比如说 for..in 循环。如果把 enumerable 设置成 false，这个属性就不会出现在枚举中，虽然仍 然可以正常访问它。相对地，设置成 true 就会让它出现在枚举中。用户定义的所有的普通属性默认都是 enumerable。
+
+
+
+```js
+var myObject = {}; 
+ 
+Object.defineProperty( 
+    myObject, "a", {     
+        writable: false, // 修改为不可写！     
+        configurable: true,     
+        enumerable: true 
+    } 
+); 
+
+Object.defineProperty( myObject, "a", {     
+    writable: true,     
+    configurable: false, // 不可配置！  delete myObject.a;  删除会失败，重新defineProperty也会报错。
+    enumerable: true 
+} );
+
+
+```
+
+### 不变性
+
+
+
+
+
+方法不写入参，调用时能传入，且通过arguments获取？
+
