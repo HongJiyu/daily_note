@@ -936,3 +936,94 @@ Foo.prototype=Object.create(Bar.prototype)
 
 以上两种方式建议使用第二种，因为能够构成原型链，同时更改Foo.prototype不会更改到Bar.prototype。因为原型链存在屏蔽。
 
+
+
+# 第十章 行为委托
+
+委托行为意味着某些对象（XYZ）在找不到属性或者方法引用时会把这个请求委托给另一个对象（Task）。
+
+这是一种极其强大的设计模式，和父类、子类、继承、多态等概念完全不同。
+
+使用的是原型链。
+
+# 面向委托的设计
+
+将两个对象通过原型链关联起来。 obj1=Object.create(obj2);    **禁止互相委托**
+
+```js
+function Foo(who) { 
+ this.me = who; 
+} 
+Foo.prototype.identify = function() { 
+ return "I am " + this.me; 
+}; 
+function Bar(who) { 
+ Foo.call( this, who ); 
+} 
+Bar.prototype = Object.create( Foo.prototype ); 
+Bar.prototype.speak = function() { 
+ alert( "Hello, " + this.identify() + "." ); 
+}; 
+var b1 = new Bar( "b1" ); 
+var b2 = new Bar( "b2" ); 
+b1.speak(); 
+b2.speak();
+```
+
+改写成这样，更好理解
+
+```js
+Foo = { 
+	init: function(who) { 
+ 		this.me = who; 
+ 	}, 
+ 	identify: function() { 
+ 		return "I am " + this.me; 
+	} 
+}; 
+Bar = Object.create( Foo ); 
+Bar.speak = function() { 
+ alert( "Hello, " + this.identify() + "." ); 
+}; 
+var b1 = Object.create( Bar ); 
+b1.init( "b1" ); 
+var b2 = Object.create( Bar ); 
+b2.init( "b2" ); 
+b1.speak(); 
+b2.speak();
+```
+
+## ES 6 的语法
+
+```js
+
+class Widget {
+  constructor(width, height) {
+    this.width = width || 50;
+    this.height = height || 50;
+    this.$elem = null;
+  }
+  render($where) {
+    if (this.$elem) {
+      this.$elem.css({
+        width: this.width + 'px',
+        height: this.height + 'px',
+      }).appendTo($where);
+    }
+  }
+}
+class Button extends Widget {
+  constructor(width, height, label) {
+    super(width, height);
+    this.label = label || 'Default';
+    this.$elem = $('<button>').text(this.label);
+  }
+  render($where) {
+    super.render($where);
+    this.$elem.click(this.onClick.bind(this));
+  }
+}
+```
+
+**实际上这里并没有真正的类，class 仍然是通过 [[Prototype]]机制实现的。**
+
