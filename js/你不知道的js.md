@@ -733,7 +733,7 @@ JavaScript 中的对象有一个特殊的 [[Prototype]] 内置属性，其实就
 ```js
 var anotherObject = {      a:2 }; 
  
-// 创建一个关联到 anotherObject 的对象 
+// 创建一个对象，它的原型关联到 anotherObject 的对象 
 var myObject = Object.create( anotherObject );  
  
 myObject.a; // 2
@@ -779,8 +779,8 @@ for in会去遍历对象的原型链上的属性，同时in操作符也会去查
 
  myObject.foo = "bar" 会出现的三种情况。
 
-1. 如果在 [[Prototype]] 链上层存在 foo ，并且没有被标记为只读（writable:false），那就会直接在myObject 中添加一个名为 foo 的新属性，它是屏蔽属性。 
-2.  如果在 [[Prototype]] 链上层存在 foo，但是它被标记为只读（writable:false），那么 无法修改已有属性或者在 myObject 上创建屏蔽属性。如果运行在严格模式下，代码会 抛出一个错误。否则，这条赋值语句会被忽略。总之，不会发生屏蔽。 
+1. 如果在 [[Prototype]] 链上层存在 foo ，并且被标记为可写（writable:true），那就会直接在myObject 中添加一个名为 foo 的新属性，它是屏蔽属性。 
+2.  如果在 [[Prototype]] 链上层存在 foo，但是它被标记为不可写（writable:false），那么 无法修改已有属性或者在 myObject 上创建屏蔽属性。如果运行在严格模式下，代码会 抛出一个错误。否则，这条赋值语句会被忽略。总之，不会发生屏蔽。 如果要在myObject创建foo，这个限制只存在于 = 赋值中，可以使用 Object.defifineProperty(..) 。
 3. 如果在 [[Prototype]] 链上层存在 foo 并且它是一个 setter，那就一定会 调用这个 setter。foo 不会被添加到（或者说屏蔽于）myObject，也不会重新定义 foo 这 个 setter。
 
 ```js
@@ -788,7 +788,8 @@ var anotherObject = {      a:2 };
  
 var myObject = Object.create( anotherObject );  
  
-anotherObject.a; // 2 myObject.a; // 2  
+anotherObject.a; // 2 
+myObject.a; // 2  
  
 
 anotherObject.hasOwnProperty( "a" ); // true 
@@ -796,21 +797,142 @@ myObject.hasOwnProperty( "a" ); // false
  
 myObject.a++; // 隐式屏蔽！ 
  
-anotherObject.a; // 2  myObject.a; // 3 
+anotherObject.a; // 2  
+myObject.a; // 3 
  
 myObject.hasOwnProperty( "a" ); // true
 
 ```
 
-<<<<<<< Updated upstream
+
 ​		尽管 myObject.a++ 看起来应该（通过委托）查找并增加 anotherObject.a 属性，但是别忘 了 ++ 操作相当于 myObject.a = myObject.a + 1。因此 ++ 操作首先会通过 [[Prototype]] 查找属性 a 并从 anotherObject.a 获取当前属性值 2，然后给这个值加 1，接着用 [[Put]] 将值 3 赋给 myObject 中新建的屏蔽属性 a，天呐！
+
 ​		修改委托属性时一定要小心。如果想让 anotherObject.a 的值增加，唯一的办法是 anotherObject.a++。
-=======
-this指向函数作用域
 
-this 是在运行时进行绑定的，并不是在编写时绑定
 
-this 的绑定和函数声明的位置没有任何关系，只取决于函数的调用方式和函数的调用位置。
 
-当一个函数被调用时，会创建一个活动记录（有时候也称为执行上下文）。这个记录会包含函数在哪里被调用（调用栈）、函数的调用方式、传入的参数等信息。this 就是这个记录的一个属性，会在函数执行的过程中用到。
->>>>>>> Stashed changes
+## 类、对象、构造函数
+
+在 JavaScript 中，类无法描述对象的行为，（因为根本就不存在类！）对象直接定义自己的行为。再说一遍，JavaScript 中只有对象。任何一个函数都可以被new，同时返回一个空对象，不过这个对象的原型会指向函数的原型所指向的对象。
+
+```js
+function Foo() { 
+ // ... 
+} 
+var a = new Foo(); 
+Object.getPrototypeOf( a ) === Foo.prototype; // true
+```
+
+​		如上，使用Foo创建了a对象，同时a对象的原型和Foo.prototype指向相同。
+
+```js
+function Foo(name) { 
+ this.name = name; 
+} 
+Foo.prototype.myName = function() { 
+ return this.name; 
+}; 
+var a = new Foo( "a" ); 
+var b = new Foo( "b" ); 
+a.myName(); // "a" 
+b.myName(); // "b"
+```
+
+​		在Foo的原型上创建了myName属性。然后使用Foo分别创建了两个对象a、b。然后再对象上调用myName函数，这时候对象本身没有找到，不过会去走他们的原型链，这时候就能找到，在Foo的原型上存在myName。
+
+​		虽然可以new一个函数来生成对象，但是这个函数不是构造函数，在javaScript中也不存在构造函数的说法。new把这个函数调用变成一个“构造函数调用”**注重构造，而不是函数**。实际上，new 会劫持所有普通函数并用构造对象的形式来调用它。
+
+```js
+function Foo() { 
+ // ... 
+} 
+Foo.prototype.constructor === Foo; // true 
+var a = new Foo(); 
+a.constructor === Foo; // true
+```
+
+​		以上代码可能存在疑惑，说了没有构造函数，但是a.constructor却指向Foo。这其实是a.constructor是在Foo.prototype上找到的一个constructor属性。Foo.prototype 的 .constructor 属性只是 Foo 函数在声明时的默认属性。如果你创建了一个新对象并替换了函数默认的 .prototype 对象引用，那么新对象并不会自动获得 .constructor 属性。
+
+```js
+function Foo() { /* .. */ } 
+Foo.prototype = { /* .. */ }; // 创建一个新原型对象
+var a1 = new Foo(); 
+a1.constructor === Foo; // false! 
+a1.constructor === Object; // true!
+```
+
+## 检查类的关系
+
+instanceof 操作符的左操作数是一个普通的对象，右操作数是一个函数。instanceof 回答的问题是：在 a 的整条 [[Prototype]] 链中是否有指向 Foo.prototype 的对象？
+
+obj1.isPrototypeOf(obj2)   obj1是否是obj2的原型链上的。
+
+Object.getPrototypeOf( a )   获取a的原型
+
+Object.setPrototypeOf(a)  设置a的原型  
+
+## 对象关联
+
+使用原型链虽然可以关联其他对象，但是会让你的代码很难被维护
+
+```js
+var anotherObject = { 
+ cool: function() { 
+ console.log( "cool!" ); 
+ } 
+}; 
+var myObject = Object.create( anotherObject ); 
+myObject.cool(); // "cool!"
+```
+
+myObject对象中本不存在cool函数，却能调用成功，会使得维护者很难看懂！可以修改为如下：
+
+```js
+var anotherObject = { 
+ cool: function() { 
+ console.log( "cool!" ); 
+ } 
+}; 
+var myObject = Object.create( anotherObject ); 
+myObject.doCool = function() { 
+ this.cool(); // 内部委托！
+}; 
+myObject.doCool(); // "cool!"
+```
+
+
+
+## 注意
+
+对象的原型对象，使用 `obj.__proto__`。
+
+函数的原型对象是 Fun.prototype。
+
+原型链是：
+
+```js
+obj.__proto__.__proto __  一直遍历下去
+Fun.prototype.__proto__.__proto__
+```
+
+1.每一个普通对象都有一个原型，指向Object.prototype。`var obj={}; obj.__proto__===Object.prototype`
+
+2.使用new创建的对象的原型===函数的原型。
+
+```js
+function test(){}
+var test1=new test();
+console.log(test1.__proto__===test.prototype);
+```
+
+2.使用`Object.create(tmp)` 会创建一个对象，并且改对象的原型指向tmp
+
+3.
+
+```js
+Foo.prototype=Bar.prototype 
+Foo.prototype=Object.create(Bar.prototype)
+```
+
+以上两种方式建议使用第二种，因为能够构成原型链，同时更改Foo.prototype不会更改到Bar.prototype。因为原型链存在屏蔽。
+
