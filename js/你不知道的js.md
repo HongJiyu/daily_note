@@ -802,5 +802,15 @@ myObject.hasOwnProperty( "a" ); // true
 
 ```
 
+<<<<<<< Updated upstream
 ​		尽管 myObject.a++ 看起来应该（通过委托）查找并增加 anotherObject.a 属性，但是别忘 了 ++ 操作相当于 myObject.a = myObject.a + 1。因此 ++ 操作首先会通过 [[Prototype]] 查找属性 a 并从 anotherObject.a 获取当前属性值 2，然后给这个值加 1，接着用 [[Put]] 将值 3 赋给 myObject 中新建的屏蔽属性 a，天呐！
 ​		修改委托属性时一定要小心。如果想让 anotherObject.a 的值增加，唯一的办法是 anotherObject.a++。
+=======
+this指向函数作用域
+
+this 是在运行时进行绑定的，并不是在编写时绑定
+
+this 的绑定和函数声明的位置没有任何关系，只取决于函数的调用方式和函数的调用位置。
+
+当一个函数被调用时，会创建一个活动记录（有时候也称为执行上下文）。这个记录会包含函数在哪里被调用（调用栈）、函数的调用方式、传入的参数等信息。this 就是这个记录的一个属性，会在函数执行的过程中用到。
+>>>>>>> Stashed changes
