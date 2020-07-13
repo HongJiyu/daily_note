@@ -250,6 +250,7 @@ var b = "foo";
  
 a; // NaN 
 b; "foo" 
+NaN ==NaN //false  NaN 和自身不相等
 
 isNaN( a ); // true 
 isNaN( b ); // true  所以一定要使用Number.isNaN()
@@ -257,3 +258,120 @@ isNaN( b ); // true  所以一定要使用Number.isNaN()
 ```
 
 ### 无穷数
+
+```js
+var a = 1 / 0; // Infinity   Number.POSITIVE_INfiNITY
+var b = -1 / 0; // -Infinity  Number.NEGATIVE_INfiNITY
+```
+
+```js
+var a = Number.MAX_VALUE; // 1.7976931348623157e+308
+a + a; // Infinity
+a + Math.pow( 2, 970 ); // Infinity
+a + Math.pow( 2, 969 ); // 1.7976931348623157e+308
+```
+
+前面说到浮点数最大为Number. MAX_VALUE，最小为Number.MIN_VALUE 。超过了这个限制就会按照规范。
+
+相对于 Infinity，Number.MAX_VALUE + Math.pow(2, 969) 与 Number.MAX_VALUE 更为接近，因此它被“向下取整”（round 
+
+down）；而 Number.MAX_VALUE + Math.pow(2, 970) 与 Infinity 更为接近，所以它被“向上取整”（round up）。
+
+**其他**
+
+Infinity/ Infinity 是一个未定义操作，结果为 NaN。
+
+有穷正数除以 Infinity ，结果是 0。
+
+### 零值
+
+```js
+var a = 0 / -3; // -0
+var b = 0 * -3; // -0
+
+a.toString(); // "0"
+a + ""; // "0"
+String( a ); // "0"
+JSON.stringify( a ); // "0"
+
++"-0"; // -0
+Number( "-0" ); // -0
+JSON.parse( "-0" ); // -0
+
+-0 == 0; // true
+
+function isNegZero(n) {
+ n = Number( n );
+ return (n === 0) && (1 / n === -Infinity);
+}
+isNegZero( -0 ); // true
+isNegZero( 0 / -3 ); // true
+isNegZero( 0 ); // false
+```
+
+​		从上面可以看出js中存在0和-0，他们是等值的。同时-0转为字符串，会变为0。字符串类型的“-0”转为整形，会是-0。判断是0还是-0，使用isNegZero方法。
+
+​		-0的意义：有些应用程序中的数据需要以级数形式来表示（比如动画帧的移动速度），数字的符号位（sign）用来代表其他信息（比如移动的方向）。此时如果一个值为 0 的变量失去了它的符号位，它的方向信息就会丢失。所以保留 0 值的符号位可以防止这类情况发生。
+
+### 特殊等式
+
+Object.is(..) 来判断两个值是否绝对相等。可以判断
+
+```js
+var a = 2 / "foo";
+var b = -3 * 0;
+Object.is( a, NaN ); // NaN , NaN  true 
+Object.is( b, -0 ); // -0 , -0 true
+Object.is( b, 0 ); // -0 , 0 false
+```
+
+能使用 == 和 ===时就尽量不要使用 Object.is(..)，因为前者效率更高、更为通用。Object.is(..) 主要用来处理那些特殊的相等比较。
+
+
+
+# 第三章：原生函数
+
+JavaScript 的内建函数（built-in function），也叫原生函数（native function），如 String 和 Number。
+
+## [[class]]属性
+
+typeof 返回值为 "object" 的对象（如数组）都包含一个内部属性 [[Class]]（我们可以把它看作一个内部的分类，而非传统的面向对象意义上的类）。这个属性无法直接访问，一般通过 Object.prototype.toString(..) 来查看。
+
+```js
+Object.prototype.toString.call( [1,2,3] );
+// "[object Array]"
+Object.prototype.toString.call( /regex-literal/i );
+// "[object RegExp]"
+Object.prototype.toString.call( null );
+// "[object Null]"
+Object.prototype.toString.call( undefined );
+// "[object Undefined]"
+Object.prototype.toString.call( "abc" );
+// "[object String]"
+Object.prototype.toString.call( 42 );
+// "[object Number]"
+Object.prototype.toString.call( true );
+// "[object Boolean]"
+```
+
+上例中基本类型值被各自的封装对象自动包装，所以它们的内部 [[Class]] 属性值分别为"String"、"Number" 和 "Boolean"。
+
+## 封装对象
+
+基 本 类 型 值 没 有 .length和 .toString() 这样的属性和方法，需要通过封装对象才能访问，此时 JavaScript 会自动为基本类型值包装（box 或者 wrap）一个封装对象。
+
+一般情况下，我们不需要直接使用封装对象。最好的办法是让 JavaScript 引擎自己决定什么时候应该使用封装对象。换句话说，就是应该优先考虑使用 "abc" 和 42 这样的基本类型值，而非 new String("abc") 和 new Number(42)。
+
+想要得到封装对象中的基本类型值，可以使用 valueOf() 函数
+
+## 原生函数做构造函数
+
+String()，Number()，Boolean()，Array()，Object()，Function()，RegExp()，Date()，Error()，Symbol()——ES6 中新加入的！
+
+关于数组（array）、对象（object）、函数（function）和正则表达式，我们通常喜欢以常量的形式来创建它们。实际上，使用常量和使用构造函数的效果是一样的（创建的值都是通过封装对象来包装）。如前所述，应该尽量避免使用构造函数，除非十分必要，因为它们经常会产生意想不到的结果。
+
+**相较于其他原生构造函数，Date(..) 和 Error(..) 的用处要大很多，因为没有对应的常量形式来作为它们的替代。**
+
+var mysym = Symbol( "my own symbol" );
+
+构造函数的原型包含它们各自类型所特有的行为特征，比如 Number#tofixed(..)（将数字转换为指定长度的整数字符串）和 Array#concat(..)（合并数组）。具体可以到浏览器输入：String.prototype查看，所有的函数都可以调用 Function.prototype 中的 apply(..)、call(..) 和 bind(..)。
