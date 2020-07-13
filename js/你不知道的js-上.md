@@ -947,7 +947,7 @@ var test1=new test();
 console.log(test1.__proto__===test.prototype);
 ```
 
-2.使用`Object.create(tmp)` 会创建一个对象，并且改对象的原型指向tmp
+2.使用`Object.create(tmp)` 会创建一个对象，并且该对象的原型指向tmp
 
 3.
 
@@ -966,7 +966,7 @@ Foo.prototype=Object.create(Bar.prototype)
 
 这是一种极其强大的设计模式，和父类、子类、继承、多态等概念完全不同。
 
-使用的是原型链。
+利用的是原型链。
 
 # 面向委托的设计
 
