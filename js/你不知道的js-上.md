@@ -746,7 +746,7 @@ console.log(anotherObject);//{a:2}
 
 ​		创建了myObject，并将myObject的原型指向了anotherObject。显然，在myObject找不到a，但是在anotherObject找到了。如果 anotherObject 中也找不到 a 并且 [[Prototype]] 链不为空的话，就会继续查找下去。查找到最终，会访问到这个 Object.prototype 对象。
 
-​		
+
 
 
 
@@ -762,16 +762,38 @@ for (var k in myObject) {
 
 for in会去遍历对象的原型链上的属性，同时in操作符也会去查找原型链。
 
+## 原型链
 
-
-## Object.prototype
-
-​		所有普通的 [[Prototype]] 链最终都会指向内置的 Object.prototype。由于所有的“普通” （内置，不是特定主机的扩展）对象都“源于”这个 Object.prototype 对象，所以它包含 JavaScript 中许多通用的功能。
-​		比如说 .toString() 和 .valueOf()， .hasOwnProperty(..), .isPrototypeOf(..)。
+原型链是：`__proto__.__proto__.__proto__`
 
 
 
-方法不写入参，调用时能传入，且通过arguments获取？
+## prototype、__proto__、constructor
+
+[帮你彻底搞懂JS中的prototype、__proto__与constructor（图解） ](https://blog.csdn.net/cc18868876837/article/details/81211729)以下结论从这里拿的
+
+1. `__proto__`和constructor属性是对象所独有的； prototype属性是函数所独有的，因为函数也是一种对象，所以函数也拥有`__proto__`和constructor属性。
+2.  `__proto__`属性的作用就是当访问一个对象的属性时，如果该对象内部不存在这个属性，那么就会去它的`__proto__`属性所指向的那个对象（父对象）里找，一直找，直到`__proto__`属性的终点null，再往上找就相当于在null上取值，会报错。通过`__proto__`属性将对象连接起来的这条链路即我们所谓的原型链。
+3. prototype属性的作用就是**让该函数所实例化的对象们都可以找到公用的属性和方法**，即`f1.__proto__ === Foo.prototype`
+4. constructor属性的含义就是指向该对象的构造函数，所有函数（此时看成对象了）最终的构造函数都指向Function。
+
+[[Prototype]] 也就是`__proto__`
+
+所有普通的 [[Prototype]] 链最终都会指向内置的 Object.prototype。由于所有的“普通” （内置，不是特定主机的扩展）对象都“源于”这个 Object.prototype 对象，所以它包含 JavaScript 中许多通用的功能。比如说 .toString() 和 .valueOf()， .hasOwnProperty(..), .isPrototypeOf(..)。
+
+
+
+想要得到一个函数的公共属性和方法，应该指向它的原型，而不是指向它的本身。
+
+```js
+var one=Object.create(Array); //不应该这么链， Array.__proto !==Array.prototype
+var two=Object.create(Array.prototype);
+
+两者不一样的，one的原型链是： Array=>Array.__proto__.__proto__。
+而two的原型链是： Array.prototype=>Array.prototype.__proto__.__proto__
+```
+
+
 
 
 
@@ -1025,5 +1047,5 @@ class Button extends Widget {
 }
 ```
 
-**实际上这里并没有真正的类，class 仍然是通过 [[Prototype]]机制实现的。**
+**实际上这里并没有真正的类，class 仍然是通过 [[Prototype]]机制实现的。**也就是说：使用ES6声明三个类，分别是A、B、C，其中B、C分别继承A。这时候A中存在的一个属性，并非时对象b、c各自拥有的，而是说对象b、c共享a中的一个属性。
 
