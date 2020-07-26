@@ -1,0 +1,54 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.12.1.min.js"></script>
+  <script src="page.js"></script>
+  <link type="text/css" rel="styleSheet" href="page.css">
+  <script>
+
+    function getInfo(flag) {
+      $.ajax({
+        type: "get",
+        async: false,
+        data: {
+          "pageIndex": P.config.pageIndex,
+          "pageSize": P.config.pageSize,
+          flag
+        },
+        url: "/messages",
+        success: function (data) {
+
+          let str = "div的数据" + data;
+          $("#messageboard").html(str);
+          if (flag) {
+            P.config.total = data.total;
+          }
+
+        },
+        error: function (err) {
+          console.log(err.responseText);
+        }
+      });
+    }
+    $(function () {
+      //	{"elemId":"#Page","pageIndex":12,"total":"123","pageNum":"7","pageSize":"10"}
+      //	elemId标签  pageIndex 当前页  total 总条数 pageNum 显示多少个页 pageSize 每页的条数 
+      //  第一次初始化 P.initMathod(xx)，第二次直接使用（div和页码都渲染）：P.renderPage()，单独渲染div:P.requestFunction(false)，
+      P.initMathod({
+        params: { pageNum: '5', pageSize: '10' },
+        requestFunction: getInfo
+      });
+    })
+  </script>
+</head>
+
+<body>
+  <div class="page" id="Page">
+
+  </div>
+</body>
+
+</html>
