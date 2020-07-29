@@ -93,7 +93,7 @@ a[13]===42; //true
 
 类数组：一组通过数字索引的值，比如arguments，转为真正的数组。这一般通过数组工具函数（如 indexOf(..)、concat(..)、forEach(..) 等）来实现。
 
-arguments其实只是一个对象，以数字作为变量名。如：`[Arguments] { '0': 1, '1': 2, '2': 3 }`
+arguments其实只是一个对象（类数组），以数字作为变量名。如：`[Arguments] { '0': 1, '1': 2, '2': 3 }`
 
 ```js
 function foo() {     
@@ -375,3 +375,207 @@ String()，Number()，Boolean()，Array()，Object()，Function()，RegExp()，D
 var mysym = Symbol( "my own symbol" );
 
 构造函数的原型包含它们各自类型所特有的行为特征，比如 Number#tofixed(..)（将数字转换为指定长度的整数字符串）和 Array#concat(..)（合并数组）。具体可以到浏览器输入：String.prototype查看，所有的函数都可以调用 Function.prototype 中的 apply(..)、call(..) 和 bind(..)。
+
+
+
+# 第四章：强制类型转换
+
+# 第五章：语法
+
+# 第六章：异步
+
+把 JavaScript 程序写在单个 .js 文件中，但是这个程序几乎一定是由多个块构成的。这 些块中只有一个是现在执行，其余的则会在将来执行。最常见的块单位是函数。
+
+## 异步控制台（略）
+
+浏览器可能会认为需要把控制台 I/O 延迟到后台，在这种情况下， 等到浏览器控制台输出对象内容时，a.index++ 可能已经执行，因此会显示 { index: 2 }。
+
+## 事件循环
+
+​		有一个用 while 循环实现的持续运行的循环，循环的每一轮称为一个tick。 对每个 tick 而言，如果在队列中有等待事件，那么就会从队列中摘下一个事件并执行。这 些事件就是你的回调函数。
+
+​		setTimeout(..) 并不是直接把回调函数挂在事件循环队列中。它所做的是设定一个定时器。当定时器到时后，环境会把你的回调函数放在事件循环中，这样，在未来 某个时刻的 tick 会摘下并执行这个回调。
+
+​		事件队列是在下一个tick执行，而任务队列是在当前循环中必须执行完。一旦有事件需要运行，事件循环就会运行，直到队列清空。事件循环的每一轮称为一个 tick。用户交互、IO 和定时器会向事件队列中加入事件。
+
+## 并行线程
+
+JavaScript 从不跨线程共享数据，这意味着不需要考虑这一层次的不确定性。但是这并不 意味着 JavaScript 总是确定性的。回忆一下前面提到的，foo() 和 bar() 的相对顺序改变可 能会导致不同结果（41 或 42）。
+
+```js
+var a = 20;  
+ 
+function foo() {      a = a + 1;  }  
+ 
+function bar() {      a = a * 2;  }  
+ 
+// ajax(..)是某个库中提供的某个Ajax函数 
+ajax( "http://some.url.1", foo );  
+ajax( "http://some.url.2", bar );
+```
+
+​		在 JavaScript 的特性中，这种函数顺序的不确定性就是通常所说的竞态条件（race condition）， foo() 和 bar() 相互竞争，看谁先运行。具体来说，因为无法可靠预测 a 和 b 的最终结果，所以才是竞态条件。利用代码来规避交互问题。1.4.2
+
+## 任务
+
+​		在 ES6 中，有一个新的概念建立在事件循环队列之上，叫作任务队列（job queue）。这个 概念给大家带来的最大影响可能是 Promise 的异步特性。
+
+​		对于任务队列最好的理解方式就是，它是挂在事件循环队列的每个 tick 之后 的一个队列。在事件循环的每个 tick 中，可能出现的异步动作不会导致一个完整的新事件添加到事件循环队列中，而会在当前 tick 的任务队列末尾添加一个项目（一个任务）。
+
+​		一个任务可能引起更多任务被添加到同一个队列末尾。所以，理论上说，任务循环（job loop）可能无限循环（一个任务总是添加另一个任务，以此类推），进而导致程序的 饿死，无法转移到下一个事件循环tick。从概念上看，这和代码中的无限循环（就像while(true)..）的体验几乎是一样的。
+
+```js
+console.log( "A" );  
+ 
+setTimeout( function(){      
+    console.log( "B" );  
+}, 0 );  
+ 
+// 理论上的"任务API"  ，
+schedule( function(){      
+    console.log( "C" );  
+ 
+    schedule( function(){          
+        console.log( "D" );      
+    } );  
+} );
+```
+
+​		可能你认为这里会打印出 A B C D，但实际打印的结果是 A C D B。因为任务处理是在当前 事件循环 tick 结尾处，且定时器触发是为了调度下一个事件循环 tick（如果可用的话！）
+
+## 语句顺序
+
+​		代码中语句的顺序和 JavaScript 引擎执行语句的顺序并不一定要一致。当你怀疑 JavaScript 引擎 做了什么疯狂的事情时（怀疑结果和预期的不一致，进而怀疑是指令重排导致的问题），实际上却是你自己代码中的 bug。重新排序是不可见 的，一切都没问题。JavaScript 引擎在编译期间执行的都是安全的优化，最后可见的结果都是一样的。
+
+ 		JavaScript 语义让我们不会见到编译器语句重排序可能导致的噩梦，这是一种幸运， 但是代码编写的方式（从上到下的模式）和编译后执行的方式之间的联系非常脆弱，理解 这一点也非常重要。
+
+# 第七章：回调
+
+回调地狱问题
+
+## 信任问题
+
+```js
+ajax( "..", function(..){    } ); 
+```
+
+​		在 JavaScript 主程序的直接控制之下。而 回调方法会延迟到将来发 生，并且是在第三方的控制下——在本例中就是函数 ajax(..)。从根本上来说，这种控制的转移通常不会给程序带来很多问题。
+​		但是，请不要被这个小概率迷惑而认为这种控制切换不是什么大问题。实际上，这是回调 驱动设计最严重（也是最微妙）的问题。它以这样一个思路为中心：有时候 ajax(..)（也就是你交付回调 continuation 的第三方）不是你编写的代码，也不在你的直接控制下。多 数情况下，它是某个第三方提供的工具。
+​		我们把这称为控制反转（inversion of control），也就是把自己程序一部分的执行控制交给某个第三方。在你的代码和第三方工具（一组你希望有人维护的东西）之间有一份并没有明确表达的契约。
+
+如果第三方不调用回调函数，那么可以如下：如果不调用，那么会在超时时间内报错，如果回调了，那么立即将报错任务删除。
+
+```js
+function timeoutify(fn,delay) {      
+    var intv = setTimeout( function(){              
+        intv = null;              
+        fn( new Error( "Timeout!" ) );          
+    }, delay )      ;  
+ 
+    return function() {          // 还没有超时？          
+        if (intv) {              
+            clearTimeout( intv );              
+            fn.apply( this, arguments );          
+        }      
+    };  
+}
+
+ajax( "http://some.url.1", timeoutify( foo, 500 ) ); 
+```
+
+如果第三方不是异步执行回调函数，那么： 
+
+```js
+function asyncify(fn) {      
+    var orig_fn = fn,          
+        intv = setTimeout( function(){              
+            intv = null;              
+            if (fn) fn();          
+        }, 0 );  
+ 
+    fn = null;  
+ 
+    return function() {          // 触发太快，在定时器intv触发指示异步转换发生之前？         
+        if (intv) {              
+            fn = orig_fn.bind.apply(                  
+                orig_fn,                   // 把封装器的this添加到bind(..)调用的参数中，
+                  // 以及克里化（currying）所有传入参数                  
+                [this].concat( [].slice.call( arguments ) )               
+            );
+        }           // 已经是异步           
+        else {               // 调用原来的函数              
+            orig_fn.apply( this, arguments );           
+        }       
+    };   
+}
+```
+
+# 第八章：promise
+
+# 第九章：生成器
+
+定义一个生成器，并构造一个迭代器执行。
+
+```js
+var x = 1;  
+ 
+function *foo() {      
+    x++;      
+    yield; // 暂停！     
+    console.log( "x:", x );  
+}  
+ 
+function bar() {      x++;  }
+
+// 构造一个迭代器it来控制这个生成器 
+var it = foo();  
+ 
+// 这里启动foo()！  
+it.next();  x;                 // 2  
+bar();  x;                 // 3  
+it.next();         // x: 3 
+```
+
+## 输入输出
+
+```js
+function *foo(x,y) {      
+    return x * y;  
+}  
+ 
+var it = foo( 6, 7 );  
+ 
+var res = it.next();  
+ 
+res.value;     // 42 
+```
+
+```js
+function *foo(x) {      
+    var y = x * (yield);      
+    return y;  }  
+ 
+var it = foo( 6 );  
+ 
+// 启动foo(..)  
+it.next();  
+ 
+var res = it.next( 7 );  //向生成器传值
+ 
+res.value;     // 42
+```
+
+```js
+function *foo(x) {      
+    var y = x * (yield "Hello");     // <-- yield一个值！      
+    return y;  
+}  
+ 
+var it = foo( 6 );  
+var res = it.next();    // 第一个next()，并不传入任何东西 ，接受值
+res.value;              // "Hello"  
+ 
+res = it.next( 7 );     // 向等待的yield传入7 
+res.value;              // 42 
+```
+

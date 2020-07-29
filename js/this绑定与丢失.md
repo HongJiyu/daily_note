@@ -67,7 +67,7 @@ data.foo(); //2
 ```
 
 ## 4.默认绑定
-默认绑定是指当上面这三条绑定规则都不符合时，默认绑定会把this指向全局对象window：
+默认绑定是指当上面这三条绑定规则都不符合时，默认绑定会把this指向全局对象window：（在node中全局指向的是global）
 
 ```js
 function thisTo(){
