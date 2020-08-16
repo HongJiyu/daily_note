@@ -322,6 +322,8 @@ db.food.insert({'name':'apple','other':{'other1':11,'other2':22}})
 db.food.find({'other':{'other2':22,'other1':11}})
 ```
 
+#### $elemMatch
+
 查询内嵌文档，要求这个文档符合条件才返回，而不是所有内嵌文档有一点符合才返回。
 
 ```js
@@ -341,8 +343,8 @@ db.food.insert({
         
     ]
 })
-场景：要求内嵌文档中，有内嵌文档符合joe并且大于或者等于5的文档。
-使用：以下语句会返回上面的文档，因为两个内嵌文档分别符合一个条件。
+场景：要求内嵌文档中，有内嵌文档符合author是joe并且score大于或者等于5的文档。
+使用：以下语句会返回上面的两个文档，因为两个内嵌文档分别符合一个条件。
 db.food.find({
     'comments.author': 'joe',
     'comments.score': {

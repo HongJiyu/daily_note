@@ -115,6 +115,8 @@ Http报文有：请求报文和响应报文，大致可以分为报文首部和�
 
 ### cache-control（控制缓存的行为）
 
+服务器返回请求时添加头 Response.Headers["Cache-Control"] = "max-age=28800,must-revalidate";那么下次请求，客户端就会从本地缓存（内存或者磁盘）找。
+
 响应public：其他用户也可以使用缓存。
 
 响应private：对特定的用户的请求提供资源缓存去响应。
