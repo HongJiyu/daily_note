@@ -62,7 +62,7 @@
 
 # mongo的全家桶
 
-![image-20200823163223306](E:\0git_note\MongoDB\img\image-20200823163223306.png)
+![image-20200823163223306](img\image-20200823163223306.png)
 
 # 传统模型设计
 
@@ -131,25 +131,25 @@ db.contacts.aggregate([
 
 那么数据量是500多亿条。 10W\*365\*24\*60 。那么索引也是非常巨大的。总的来说数据量百亿，数据大小10TB级别。
 
-![image-20200825214422856](E:\0git_note\MongoDB\img\image-20200825214422856.png)
+![image-20200825214422856](img\image-20200825214422856.png)
 
 解决：采用分桶，每小时一个文档，文档数组字段保存60分钟的数据。
 
 数据对比：文档数量少了60倍。数据大小，小在公共字段和索引大小。
 
-![image-20200825214428034](E:\0git_note\MongoDB\img\image-20200825214428034.png)
+![image-20200825214428034](img\image-20200825214428034.png)
 
 
 
 分桶模式：
 
-![image-20200825214516713](E:\0git_note\MongoDB\img\image-20200825214516713.png)
+![image-20200825214516713](img\image-20200825214516713.png)
 
 
 
 其他模式：
 
-![image-20200825214557555](E:\0git_note\MongoDB\img\image-20200825214557555.png)
+![image-20200825214557555](img\image-20200825214557555.png)
 
 # 设计模式集锦
 
@@ -157,7 +157,7 @@ db.contacts.aggregate([
 
 ## 版本号
 
-![image-20200825215838790](E:\0git_note\MongoDB\img\image-20200825215838790.png)
+![image-20200825215838790](img\image-20200825215838790.png)
 
 通过记录文档的版本号，以区分一些操作是需要在哪个版本进行操作。
 
@@ -176,7 +176,7 @@ if random(0,9) === 0
 	increment by 10
 ```
 
-![image-20200825220157588](E:\0git_note\MongoDB\img\image-20200825220157588.png)
+![image-20200825220157588](img\image-20200825220157588.png)
 
 
 
@@ -186,9 +186,9 @@ if random(0,9) === 0
 
 解决：多增加几个字段，存储聚合数据。
 
-![image-20200825220304376](E:\0git_note\MongoDB\img\image-20200825220304376.png)
+![image-20200825220304376](img\image-20200825220304376.png)
 
-![image-20200825220314587](E:\0git_note\MongoDB\img\image-20200825220314587.png)
+![image-20200825220314587](img\image-20200825220314587.png)
 
 
 
@@ -293,28 +293,28 @@ snapshot：读取最近快照中的数据。
 
    缺点：只对读取单个文档有效、效率低。
 
-![image-20200830164850743](E:\0git_note\MongoDB\img\image-20200830164850743.png)
+![image-20200830164850743](img\image-20200830164850743.png)
 
 
 
 # mongo的事务
 
-![image-20200830171712013](E:\0git_note\MongoDB\img\image-20200830171712013.png)
+![image-20200830171712013](img\image-20200830171712013.png)
 
 注意：
 
-![image-20200830172319221](E:\0git_note\MongoDB\img\image-20200830172319221.png)
+![image-20200830172319221](img\image-20200830172319221.png)
 
 案例：
 
-![image-20200830173024358](E:\0git_note\MongoDB\img\image-20200830173024358.png)
+![image-20200830173024358](img\image-20200830173024358.png)
 
-![image-20200830173100490](E:\0git_note\MongoDB\img\image-20200830173100490.png)
+![image-20200830173100490](img\image-20200830173100490.png)
 
-![image-20200830173117412](E:\0git_note\MongoDB\img\image-20200830173117412.png)
+![image-20200830173117412](img\image-20200830173117412.png)
 
-![image-20200830173205898](E:\0git_note\MongoDB\img\image-20200830173205898.png)
+![image-20200830173205898](img\image-20200830173205898.png)
 
-![image-20200830173253563](E:\0git_note\MongoDB\img\image-20200830173253563.png)
+![image-20200830173253563](img\image-20200830173253563.png)
 
-![image-20200830173301060](E:\0git_note\MongoDB\img\image-20200830173301060.png)
+![image-20200830173301060](img\image-20200830173301060.png)
