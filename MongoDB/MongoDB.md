@@ -429,6 +429,44 @@ db.food.find({'fruit':'11'}) //能查找得到上面插入的文档
 
 查询数组内嵌文档时，一定要考虑清楚，使用$elemMatch
 
+### 模糊查找
+
+/hjy/i  不需要加引号。   模糊查找包含hjy的，并且表示忽略大小写。
+
+```js
+db.collectionName.find( { xxx:/hjy/i } )
+```
+
+mongoose
+
+```js
+db.collectionName.find({ xxx: new Regex('hjy','i')})
+```
+
+## 批量写操作
+
+```js
+bulkWrite(
+ [
+	{
+        updateOne:{
+            filter:
+            update:
+            upsert: //upsert和insert的结合，default by false
+            
+        }
+    },
+     {
+         
+     } 
+ ],
+    {
+   		writeConcern:
+        ordered:
+ 	}
+)
+```
+
 
 
 ## 游标
