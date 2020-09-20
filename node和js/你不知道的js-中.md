@@ -134,6 +134,8 @@ var d = Array.prototype.map.call( a, function(v){
 
 ## 数字
 
+Number类型表示数字，JavaScript 采用“IEEE 754 标准定义的双精度64位格式”（"double-precision 64-bit format IEEE 754 values"）表示数字。
+
 toFixed() 方法可把 Number 四舍五入为指定小数位数的数字。
 
 toPrecision() 方法可在对象的值超出指定位数时将其转换为指数计数法。
