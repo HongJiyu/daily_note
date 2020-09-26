@@ -1,3 +1,5 @@
+
+
 # es的字段
 
 es的keyword是不会分词的，text字段会被分词（完全匹配反而查不到）。
@@ -92,6 +94,72 @@ must和must_not可以放如下：(fieldName和name是需要填写的)
     }
 }
 ```
+
+must和filter组合
+
+```js
+
+{
+     'query': {
+          'bool': {
+            'filter': {
+              'script': {
+                'script': "doc['fail_reason'][0].length()<50",
+              },
+            },
+            'must': [
+              {
+                'range': {
+                  'ftime': {
+                    'gte': lastYearTime,
+                    'lte': curTime,
+                  }
+                }
+              },
+              {
+                'term': {
+                  'translateStatus': '1',
+                },
+              },
+            ],
+          },
+        },
+ }
+```
+
+must后再进行筛选（满足must后，1or2 都可以）
+
+```js
+        query: {
+          bool: {
+            must: [
+              // 满足rowkeys后：符合 errNameRowKeys or 其他信息符合keyword
+              { terms: { rowkey: rowkeys } },
+              {
+                bool: {
+                  should: [
+                    {
+                      multi_match: {
+                        fields: [
+                          'version',
+                          'chid',
+                          'script_ver',
+                          'engine_ver',
+                          'os',
+                        ],
+                        query: keyword,
+                      },
+                    },
+                    { terms: { rowkey: errNameRowKeys } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+```
+
+
 
 
 
