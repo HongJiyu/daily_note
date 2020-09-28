@@ -159,9 +159,46 @@ must后再进行筛选（满足must后，1or2 都可以）
         },
 ```
 
+## minimum_should_match
 
+minimum_should_match用于控制bool中should列表，至少匹配几个条件才召回doc。
 
+默认不传minimum_should_match的情况下，查询分2个情况：
 
+- 当bool处在query上下文中时，并且must或者filter匹配了doc，那么should即便一条都不满足也可以返回doc。
+- 当bool处在父bool的filter、must上下文中时 或者 bool处在query上下文且没有must/filter子句的时候，should至少匹配1个才能返回doc。
+
+```js
+//伪代码
+query:{
+    bool {
+       filter: [
+         a=1,
+         bool {
+            should: [
+               b=2,
+               c=3
+            ]
+         }
+       ]
+    }
+}
+
+query:{
+    bool {
+       filter: [
+         a=1,
+       ],
+       should: [
+         b=2,
+         c=3
+       ],
+       minimum_should_match: 1
+    }
+}
+```
+
+这也解释了上一个案例将should写在must里面
 
 # es的聚合
 
