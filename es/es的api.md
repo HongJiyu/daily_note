@@ -1,17 +1,83 @@
-
+https://xiaoxiami.gitbook.io/elasticsearch/   中文文档
 
 # es的字段
 
 es的keyword是不会分词的，text字段会被分词（完全匹配反而查不到）。
 
+text被分词例子："xiao xia mi"  =>  "xiao"  "xia" "mi" 
+
+keyword不会被分词，"xiao xia mi"  => "xiao xia mi"
+
+# es分析器
+
+分析器（无论是内置还是自定义）只是一个包含三个较底层组件的包：字符过滤器，分词器，和词语过滤器。
+
+```js
+//查看某个分析器的效果
+POST _analyze
+{
+  "analyzer": "whitespace",
+  "text":     "The quick brown fox."
+}
+```
+
+分析器不仅将单词转换为词语，还记录了每个词语（用于短语查询或近义词查询）的顺序或相对位置，以及原始文本中每个词语的起始和结束字符的偏移量（用于突出搜索片段）。
+
+自定义分析器的使用
+
+```js
+PUT my_index
+{
+//my_index索引下配置分析器
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "std_folded": {                       #1
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        }
+      }
+    }
+  },
+//my_index索引下 my_type索引类型的my_text字段用std_folded分析器
+  "mappings": {
+    "my_type": {
+      "properties": {
+        "my_text": {
+          "type": "text",
+          "analyzer": "std_folded"            #2
+        }
+      }
+    }
+  }}
+//查看my_index索引下std_folded分析器对"Is this déjà vu?"的分词效果
+GET my_index/_analyze {                       #3
+  "analyzer": "std_folded",                   #4
+  "text":     "Is this déjà vu?"}
+
+GET my_index/_analyze {                       #5
+  "field": "my_text",                         #6
+   "text":  "Is this déjà vu?"}
+```
+
+
+
 # es 的查询api
 
-term 查询的值不会分词。只要washing 是name字段的子集，就能匹配得到。
+term 查询的值不会分词。只要xiao是name字段的子集，就能匹配得到。
+
+比如有个文档的值是"xiao xia mi" （text） =>  "xiao"  "xia" "mi" 那么xiao是它的自己，就会返回这个文档。
+
+不过如果是keyword "xiao xia mi" （keyword）  => "xiao xia mi" ， "xiao" 不是它的子集，所以查不到。
 
 ```js
  "query": {
     "term": {
-      "name": "washing"
+      "name": "xiao"
     }
   }
 ```
