@@ -64,7 +64,13 @@ GET my_index/_analyze {                       #5
    "text":  "Is this déjà vu?"}
 ```
 
+## 安装中文插件
 
+```js
+https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.5.2/elasticsearch-analysis-ik-7.5.2.zip
+```
+
+把7.5.2换成对应的es版本，然后下载，解压。在es/plugins/ik/ 下放入解压后的文件
 
 # es 的查询api
 
