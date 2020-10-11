@@ -1,10 +1,18 @@
 # docker
 
-它是轻量级，更加细粒话，直接运行在宿主硬件上，进程级别。
+它是轻量级，更加细粒话，可以直接运行在宿主硬件上，进程级别。
 
 https://www.zhihu.com/question/48174633
 
 ![image-20201005115844004](E:\0git_note\docker\img\image-20201005115844004.png)
+
+隔离级别：虚拟机需要在宿主操作系统虚拟一个操作系统，而容器直接运行在宿主操作系统，进程级别。
+
+系统资源：一个需要操作系统，一个是进程，所需资源必然更少。
+
+启动时间：同样，进程的启动时间更快。
+
+镜像：虚拟机的镜像很大，而容器的镜像是分层的，基础容器是公用的。
 
 # docker安装
 
@@ -12,9 +20,9 @@ https://docs.docker.com/engine/install/centos/
 
 # 底层技术支持
 
-namespces：做隔离pid,net,ipc,mnt,uts
+namespces：做隔离，存在以下类型的命名空间：pid,net,ipc,mnt,uts
 
-Control groups：做资源限制
+Control groups（cgroups）：做资源限制
 
 Union file systems：Container和image的分层
 
@@ -42,10 +50,18 @@ docker pull ubuntu:14.04  //从docker hub拉取
 
 docker history id  //查看这个image的各层
 
-docker image bulid -t xx .  //build an image from dockerfile
+docker image bulid -t xx .  //会在当前目录查找一个Dockerfile文件，然后构建镜像，名字是xx
 
 docker rmi xx //删除某个image
 ```
+
+​		构建是由docker守护进程执行的。docker客户端和守护进程不要求在同一台机器上。比如在window上建立的虚拟机，在虚拟机上构建。那么客户端是在宿主机器上，守护进程在虚拟机上。客户端先将文件上传到虚拟机的守护进程，然后再构建。因此如果文件过大，会花费更多时间。
+
+​		镜像不是一个很大的二进制块，而是分层的。因此基础镜像只会被存储一次。可以被公用。docker只会去下载未被存储的分层。
+
+​		构建时，Dockerfile的每一行，都会是一层。构建过程：
+
+![image-20201011105959085](E:\0git_note\docker\img\image-20201011105959085.png)
 
 # Docker Container
 
@@ -64,7 +80,9 @@ docker run -it <image>  //交互式运行，好像要加/bin/bash
 
 docker container commit //create a new image
 
-docker rm $(docker ps -qa) //删除所有结束的容器
+docker rm $(docker ps -qa) //删除所有不在运行地容器
+
+docker run -d  --name web-container -p 8082:8080 web //<image> 必须放在最后
 ```
 
 # Docker 的Command
@@ -81,9 +99,9 @@ docker image
 
 在centos的image下，生成一个带有vim功能的centos
 
-1. 通过image ，run一个conotainer，然后yum install vim后，结束后，退出，再通过commit ，生成一个新的image
-
+1. 通过image ，run一个conotainer，然后yum install vim后（增加了vim功能后），结束后，退出，再通过commit ，生成一个具有vim功能的image
 2. 通过DockerFile去build一个，中间会生成一个临时container。
+3. 直接从docker hub pull。
 
 建议通过dockerfile去生成image
 
@@ -150,7 +168,7 @@ COPY由于ADD，因为ADD还有额外的解压功能。
 
 ## ENV
 
-设置常量，再后面可以通过${}引用
+设置常量，再后面可以通过$引用，好像是会在容器主机的环境变量里面。
 
 ```js
 ENV MYSQL_VERSION 5.6
@@ -162,42 +180,44 @@ RUN apt-get install -y mysql-server = "${MYSQL_VERSION}" \ &&
 
 存储和网络
 
-volume 某个目录下的文件都持久化到宿主机器
+volume 某个目录下的文件都持久化到宿主机器 (第三讲)
 
-expose 暴露端口
+expose 
+
+The `EXPOSE` instruction does not actually publish the port.  To actually publish the port when running the container, use the `-p` flag on `docker run` to publish and map one or more ports, or the `-P` flag to publish all exposed ports and map them to high-order ports.
+
+expose的作用，docker run -P ，会将expose的端口映射到主机的随机端口上。
 
 ## CMD and ENTRYPOINT
 
 cmd
 
-设置容器启动后默认执行的命令和参数。
+The *exec* form is parsed as a JSON array, which means that you must use double-quotes (“) around words not single-quotes (‘).
+
+**The main purpose of a `CMD` is to provide defaults for an executing container**
+
+**If `CMD` is used to provide default arguments for the `ENTRYPOINT` instruction, both the `CMD` and `ENTRYPOINT` instructions should be specified with the JSON array format.**
 
 如果定义多个CMD,只有最后一个会执行。
 
-如果docker run制定了其他命令，CMD命令被忽略。
-
-docker run -it image /bin/bash ,这样，那这个image如果有CMD，也不会被执行。
+如果docker run制定了其他命令，CMD命令被忽略。docker run -it image /bin/bash ,这样，那这个image如果有CMD，也不会被执行。
 
 
 
-entrypoint:设置容器启动时运行的命令
+entrypoint:
 
-让容器以应用程序或服务的形式运行，不会被忽略，一定会执行。
+和cmd一样，是执行shell和exec命令的。
 
 
 
-两者结合，执行命令并传参数
-
-dockerfile
+两者结合，entrypoint执行命令，而cmd 提供默认值，或者在命令行提供（docker run -it < image > --vm 1 --xx x --xx x）如下：
 
 ```js
-FROM ubuntu
-RUN apt-get update && apt-get install -y stress
-ENTRYPOINT ['/usr/bin/stress']
-CMD []
+ENTRYPOINT ["/usr/sbin/nginx"]
+CMD ["-h"]
 ```
 
-docker run -it < image > --vm 1 --xx x --xx x
+容器启动执行 nginx -h 如果docker run 指定参数，那么nginx -xx
 
 ### shell格式和exec格式
 
@@ -231,7 +251,7 @@ docker login
 
 docker image push image命名:tag
 
-上面这种直接上传image不建议。最后是docker hub和git hub关联，然后在git hub维护dockerfile，docker hub会帮我们build
+上面这种直接上传image不建议。最好是docker hub和git hub关联，然后在git hub维护dockerfile，docker hub会帮我们build
 
 搭建一个私有的registry 
 
@@ -248,6 +268,15 @@ docker image push image命名:tag
 进入到后台运行的container中：
 
 docker exec -it  < containerId >  /bin/bash
+
+```js
+-i 确保标准输入流保持开放，
+-t 分配一个伪终端
+```
+
+在宿主机器使用top，和容器内部使用top。
+
+在宿主机器会发现容器的进程，这也证明了运行在容器的进程是运行在主机操作系统上的，不过id不同，因为容器使用独立的pid linux命名空间并且有独立的序列号，完全独立于进程树。
 
 停掉container：docker stop < containerId >  
 

@@ -126,7 +126,7 @@ docker network connect <networkname> <containername>
 docker network  inspect <networkname>
 ```
 
-docker run -p 80:8080 < img> //把启动后的容器的80端口映射到主机的8080
+docker run -p 80:8080 < img> //把主机的80端口映射到容器的8080
 
 # 部署复杂的application
 

@@ -6,9 +6,9 @@
 
 # Volume的类型
 
-受管理的data Volume，由docker自动创建。
+1. 受管理的data Volume，由docker自动创建并管理。
 
-绑定挂载的Volume，具体挂载位置可以由用户指定。
+2. 直接设置container中要持久化的目录和host主机绑定，由用户指定。
 
 
 
@@ -20,27 +20,28 @@
 
 如上图，mysql的dockerfile，就指定了这个container的/var/lib/mysql目录下，会被持久化。
 
-接下来，run这个image，然后通过：
+接下来，run这个image，docker会自动创建一个volume，然后通过：
 
 ```js
 docker volume ls //查看所有的volume，会多出一个volume，即使container被删除了，volume也不会被删除。
-docker volume inspect  <volume name> //查看这个volume的信息
+docker volume inspect  <volume name> //查看这个volume的信息，挂载在主机的具体位置
 docker volume rm <volume name> //删除掉
 ```
 
 这个docker volume自动生成，命名不友好。
 
-自定义：
+自定义命名：
 
 ```js
 docker run -d -v mysql:/var/lib/mysql -name mysql1 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql
+docker volume inspect mysql //查看生成的volume信息
 ```
 
 -d 后台运行
 
 -name 这个container的别名
 
--e 允许mysql空密码
+-e 允许mysql空密码，环境变量
 
 mysql image名
 
@@ -51,6 +52,18 @@ mysql image名
 docker run -v $(pwd):/xx/xx/xx < image >
 
 把本地当前路径映射到容器的/xx/xx/xx目录，也就是这两个文件夹是**互通的，同步的**。
+
+# 区别
+
+可以看到一个由docker管理，是建立一个volume；一个是指定一个host路径：
+
+docker run -d -v mysql:/var/lib/mysql -name mysql1 -e 
+
+docker run -v $(pwd):/xx/xx/xx < image >
+
+mysql是一个volume名，而${pwd}是host主机的路径 ，区分：是否带有 / 开头
+
+https://www.jianshu.com/p/ef0f24fd0674
 
 # 搭建一个wordpress
 
@@ -106,8 +119,6 @@ networks:
   my-bridge:
     driver: bridge
 ```
-
-
 
 启动：docker-compose -f  docker-compse.yml up   /   docker-compose up
 
