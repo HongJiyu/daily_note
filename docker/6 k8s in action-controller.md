@@ -43,13 +43,13 @@ spec:
 kubectl describe pod <podName>
 ```
 
-![image-20201013232110647](E:\0git_note\docker\img\image-20201013232110647.png)
+![image-20201013232110647](img\image-20201013232110647.png)
 
 137表示进程被外部信号终止。128+9 ，9表示终止进程的信号编号。
 
 探针的其他属性：
 
-![image-20201013232315779](E:\0git_note\docker\img\image-20201013232315779.png)
+![image-20201013232315779](img\image-20201013232315779.png)
 
 访问地址，容器启动后延迟多久开始探针，访问地址超时时间，访问周期，失败多少次后重启容器。
 
@@ -76,4 +76,190 @@ kubectl describe pod <podName>
 
 
 # Replicationcontroller
+
+ReplicationController会去托管pod。自动帮我们创建pod。
+
+ReplicationController 会去处理当节点宕机，会将节点所在的pod，全部在新的节点创建新的复制集。
+
+ReplicationController 的副本个数，标签选择器、模板可以随时修改，但是只有副本数量会影响现有的pod。
+
+更改标签选择器，会使现有的pod脱离ReplicationController的控制。
+
+ReplicationController.yaml
+
+```yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: web-node
+spec:
+  replicas: 3
+  selector:
+    app: web
+  template:
+    metadata:
+      labels:
+        app:web
+      spec:
+        containers:
+        - name:web-node-container
+          image: luksa/kubia
+          ports:
+          - containerPort: 8080
+```
+
+使用到了标签选择器，找到 app为web的模板，让其复制集为3。
+
+**注意**：在定义ReplicationController时可以不指定pod标签选择器，那么k8s会从pod模板提取。
+
+根据yaml文件创建controller
+
+```shell
+kubectl create -f ReplicationController.yaml
+```
+
+## 使用ReplicationController
+
+```shell
+kubectl get rc 
+describe rc <rcName>
+```
+
+k8s并不是因为受到pod删除通知而去创建新的pod，而是因为检车到目前运行的pod与期望pod数量不符合，才去创建pod。
+
+### 模拟节点故障
+
+minikube 无法实操。因他是单节点，主节点和工作节点共用一个节点。
+
+通过关闭网络节点模拟节点故障。
+
+具体《k8s in action》 page：96
+
+### 将pod移入移出ReplicationController作用域
+
+可以通过查看metadata.ownerReferences字段，查看一个pod属于哪一个ReplicationController。（待实操，应该是describe pod < podName>）
+
+ReplicationController是通过标签选择器来选择要控制Pod。因此想让pod脱离控制，直接修改pod的标签，而不是新增，因为controller不会去管pod是否有其他附加的标签，而是在乎pod的标签里是否存在它想要的标签。
+
+```shell
+kubectl label pod <podName> key=value #新增标签，不会对复制集产生影响
+kubectl label pod <podName> key=value --overwrite
+# --overwrite必要参数，否则只是告警，因为k8s防止你想添加而无意间修改了现有标签。
+```
+
+**注意：**如果是不是修改pod标签，而是修改controller的标签选择器，那么会导致所有的pod脱离控制，controller会建立新的pod复制集。
+
+### 修改pod模板
+
+只有修改复制集的数量，才会对现有的pod做出数量变化，而修改pod模板，只会对之后新创建的pod产生影响，而不会改变旧的pod，除非手动去删除。
+
+```shell
+kubectl edit rc <rcName> # 编辑修改yaml配置。
+# 保存退出后，配置就会生效。
+```
+
+### 水平伸缩
+
+两种方法
+
+1.shell语句
+
+```shell
+kubectl scale rc <rcName> --replicas=n
+```
+
+2.修改配置文件
+
+```shell
+kubectl edit rc <rcName>
+```
+
+### 删除ReplicationController
+
+删除controller，那么所管理的pod也会被删除。
+
+```shell
+kubectl delete rc <rcName>
+```
+
+pod只是被管理，而不是controller的组成，所以也可以只删除controller，而pod继续不中断运行。
+
+```shell
+kubectl delete rc <rcName> --cascade=false
+```
+
+使用 --cascade删除controller后，pod还存在，它能够被其他controller接管（ReplicaSet、ReplicationController）
+
+## 使用ReplicaSet而不是ReplicationController
+
+行为完全相同，不过ReplicaSet的标签选择器更为强大。
+
+![image-20201014231145893](img\image-20201014231145893.png)
+
+```yaml
+apiVersion: v1 => apps/v1beta2
+kind: ReplicationController => ReplicaSet
+metadata:
+  name: web-node
+spec:
+  replicas: 3
+  selector:
+    matchLabels: =>新增
+      app: web
+  template:
+    metadata:
+      labels:
+        app:web
+      spec:
+        containers:
+        - name:web-node-container
+          image: luksa/kubia
+          ports:
+          - containerPort: 8080
+```
+
+修改地方：apiVersion、kind、selector.matchLabels
+
+以上创建一个ReplicaSet，那么之前删除controller，但未删除的pod，也会被它接管，因为选择的标签没改动，因此不会去创建新的pod。
+
+```shell
+kubectl create -f xx.yaml
+kubectl get rs
+kubectl describe rs <rsName?>
+```
+
+### 更富表达力的标签选择器
+
+```yaml
+selector:
+  matchExpressions:
+    - key: app
+      operator: In
+      values:
+        - kubia
+```
+
+意思是：匹配标签名未app，且值必须与values（数组）中的某个元素匹配，在这里是值必须与kubia匹配。
+
+operator：
+
+![image-20201014232425259](img\image-20201014232425259.png)
+
+如果指定多个matchExpression，则必须所有表达式未true，才能使选择器与pod匹配。
+
+```yaml
+  matchExpressions:
+    - key: app
+      ...
+    - key: app2
+      ...
+```
+
+如果同时指定matchLabels和matchExpressions，则matchLabel必须匹配，且所有matchExpression必须为true才能匹配。
+
+### 删除ReplicaSet
+
+```shell
+kubectl delete rs <rsName>
+```
 
