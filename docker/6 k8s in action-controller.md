@@ -190,7 +190,7 @@ kubectl delete rc <rcName> --cascade=false
 
 使用 --cascade删除controller后，pod还存在，它能够被其他controller接管（ReplicaSet、ReplicationController）
 
-## 使用ReplicaSet而不是ReplicationController
+# ReplicaSet
 
 行为完全相同，不过ReplicaSet的标签选择器更为强大。
 
@@ -228,7 +228,7 @@ kubectl get rs
 kubectl describe rs <rsName?>
 ```
 
-### 更富表达力的标签选择器
+## 更富表达力的标签选择器
 
 ```yaml
 selector:
@@ -257,9 +257,173 @@ operator：
 
 如果同时指定matchLabels和matchExpressions，则matchLabel必须匹配，且所有matchExpression必须为true才能匹配。
 
-### 删除ReplicaSet
+## 删除ReplicaSet
 
 ```shell
 kubectl delete rs <rsName>
 ```
+
+# DaemonSet
+
+ReplicaSet和ReplicationController只是在集群上部署特定数量的pod，如果希望pod在集群的每个节点上运行（每个节点都有一个pod实例）。
+
+场景：pod执行系统级别的与基础结构相关的操作：日志收集和资源监控。
+
+在以上场景就会有将pod部署在每一个节点上的需求。
+
+使用DaemonSet：会在符合的节点（没指定默认所有节点，或者是在模板上通过nodeSelector属性指定节点）上部署pod，如果节点下线，DaemonSet不会在其他地方重新创建pod。当新增节点时，DaemonSet会立即部署一个新的pod实例。同时pod被删除，和replicaSet和replicationController一样，会建立新的pod。
+
+```yaml
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  name: node-web
+spec:
+  selector:
+    matchLabels:
+      app: nodeweb
+  template:
+    metadata:
+      labels:
+        app: nodeweb
+    spec:
+      nodeSelector: #指定在有这个标签的节点上部署pod
+        disk: ssd
+      containers:
+      - name: node
+        image: luksa/ssd-monitor
+```
+
+先在节点上设置标签，才会部署pod
+
+```shell
+1.kubectl label node <nodeName> disk=ssd
+```
+
+```shell
+2.kubectl create -f xxx.yaml
+```
+
+1和2的先后顺序都可以，DaemonSet启动后会去监控的。
+
+## 删除/更改节点标签后
+
+```shell
+kubectl label node <nodeName> disk=none --overwrite
+```
+
+pod会被DaemonSet终止掉。
+
+## 删除DaemonSet
+
+删除DaemonSet，也会一起删除pod
+
+# 运行执行单个任务的pod
+
+场景：如果你需要运行一个任务，而且这个任务在完成后正常退出。比如：需要开一个任务，它负责将图片从一台服务器迁移到另一台服务器，迁移完后，任务自动结束。
+
+分析：如果直接通过创建pod，那么当迁移到一半，进程异常退出、节点宕机或者pod被移除了，那么任务也就被取消了。如果托管给ReplicationController、ReplicaSet或者是DaemonSet，那么就算迁移完成，任务也不会结束，容器会持续存在。
+
+k8s的job对该场景提供了支持。
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:batch-job
+spec:
+  template:
+    metadata:
+      labels:
+        app:batch-job
+    spec:
+      restartPlicy: OnFailure #进程异常退出，则容器重启
+      containers:
+      - name: main
+        image: luksa/batch-job
+```
+
+这个镜像时调用一个运行120秒的进程，然后退出。
+
+job不能指定重启策略为：always，因为它执行完就必须退出。重启策略默认为always
+
+## 运行job
+
+```shell
+kubectl create -f xx.yaml
+kubectl get jobs
+```
+
+过了120s后，pod状态显示已完成，但是不会被删除，这是允许你查阅其日志:
+
+```shell
+kubectl logs <podName>
+```
+
+pod显示完成，同时job也显示成功完成。
+
+## job运行多个pod
+
+通过设置completions和parallelism
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:batch-job
+spec:
+  completions: 5 #总共运行5个pod
+  parallelism: 2 #两个两个运行，一个结束创建另一个，默认1
+  template:
+    metadata:
+      labels:
+        app:batch-job
+    spec:
+      restartPlicy: OnFailure #进程异常退出，则容器重启
+      containers:
+      - name: main
+        image: luksa/batch-job
+```
+
+job运行时修改parallelism
+
+```shell
+kubectl scale job <jobName> --replicas 3
+```
+
+## job限制pod运行时间
+
+设置属性 activeDeadlineSeconds ，如果pod运行超过此时间，系统尝试终止pod，并标记job为失败。
+
+spec.backoffLimit 可以配置job被标记为失败之前可以重试的次数，默认为6
+
+# CronJob
+
+类似定时任务的job。
+
+```yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name:batch-job-every-fifteen-minutes
+spec:
+  schedule: "0,15,30,45 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+          app: perioddic-batch-job
+        spec:
+          restartPlicy: OnFailure #进程异常退出，则容器重启
+          containers:
+          - name: main
+            image: luksa/batch-job
+```
+
+分钟 小时 每月的第几天 月 星期几
+
+在到达指定时间后，CronJob会创建job资源。job资源创建pod资源。这种创建job再创建job，可能会导致任务真正开始执行的时间比指定的时间要慢。
+
+spec.startingDeadlineSeconds：15，pod最迟必须在预定时间后15s内运行。如果超时了，则任务不会运行，并显示为failed。
 
