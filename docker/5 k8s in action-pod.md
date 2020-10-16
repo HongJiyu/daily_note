@@ -202,7 +202,7 @@ curl localhost:8888
 
 # 标签组织pod
 
-标签用于明确选择，可以去选择具有确切标签的资源。（这是通过标签选择器完成的）
+标签用于明确选择，可以去选择具有确切标签的资源。（这是通过标签选择器完成的）。标签不只是pod可以有，k8s的所有资源都可以拥有标签
 
 ![image-20201011211306780](img\image-20201011211306780.png)
 
@@ -235,3 +235,172 @@ kubectl label pods <podname> key=value --overwrite //修改标签
 
 # 通过标签选择器列出pod子集
 
+标签要与标签选择器一起，才能够发挥出作用
+
+```shell
+#筛选出含有env标签的pod
+kubectl get pods -l env
+#筛选出不含env标签的pod
+kubectl get pods -l '!env'
+#筛选出env等于trunk的pod
+kubectl get pods -l env=trunk
+#筛选出env不等于trunk的pod
+kubectl get pods -l env!=trunk
+#筛选出env的值为trunk或local的pod
+kubectl get pods -l env in (trunk,local)
+#筛选出env的值不为trunk和local的pod
+kubectl get pods -l env notin (trunk,local)
+#筛选出env值为trunk且app值为web的pod
+kubectl get pods -l env=trunk,app=web
+```
+
+# 使用标签和选择器来约束pod调度
+
+虽然不需要关心pod被调度到哪个节点，因为这才是符合k8s的理念。不过如果真的需要指定某些pod被调度到指定的节点，比如：执行计算较频繁的调度到cpu密集型的机器上，频繁与磁盘交互的放到有固态盘去。这种指定pod到指定节点，可以通过标签实现。
+
+## 将pod调度到指定节点
+
+给节点添加标签：
+
+```shell
+kubectl label node <nodename> key=value
+kubectl label get nodes -l key=value #查看
+```
+
+修改pod的配置
+
+```shell
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+spec:
+  nodeSelector:  #该pod调度到标签gpu=true的node中。
+    gpu: "true"
+  containers:
+  - image: hongjiyu/node-web
+    name: node-web
+```
+
+每个节点有一个唯一标签：key是kubenetes.io/hostname，value是实际主机名。因此可以将pod调度到唯一个节点。但是节点为离线状态，则会导致不可调度。
+
+# 注解pod
+
+k8s的资源都可以有注解，没啥用处，应该就是添加一些备注信息，用于使工作人员协作更加遍历。
+
+## 查看注解
+
+```shell
+kubectl get pod <podname> -o yaml
+# metadata下的annotations就是注解
+```
+
+## 添加注解
+
+```shell
+kubectl annotate pod <podname> key=value
+```
+
+# 命名空间
+
+这里的命名空间和用于互相隔离进程的linux命名空间不一样。命名空间只是对用户感官是不同命名空间是隔离的，其实内部并不隔离。
+
+这里的命名空间提供一个作用域，如果多个用户操作同一个k8s集群，那么就应该给每个用户都分配一个命名空间，这样就不会出现某个用户误删了其他用户的资源。
+
+通过命名空间，将资源分配为生产、开发等环境。资源名称只需在所在的命名空间保持唯一即可。
+
+```shell
+kubectl get ns #查看所有命名空间
+kubectl get pod --namespace <namespaceName> #查看这个命名空间下的所有pod，可用-n替换--namespace
+```
+
+除了隔离，还用于只允许某些用户访问特定资源甚至使可用的计算资源数量。
+
+## 创建命名空间
+
+通过配置文件
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hjy-namespace #命名空间的名字
+```
+
+```shell
+kubectl create -f <fileName>
+```
+
+通过shell
+
+```shell
+kubectl create namespace <namespaceName>
+```
+
+## 指定资源所属的命名空间
+
+在配置文件的metadata字段添加
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+  namespace:web-namespace
+spec:
+  nodeSelector:  #该pod调度到标签gpu=true的node中。
+    gpu: "true"
+  containers:
+  - image: hongjiyu/node-web
+    name: node-web
+```
+
+通过shell指定
+
+```shell
+kubectl create -f <fileName> -n web-namespace
+```
+
+所有操作都需要指定命名空间，否则默认使操作默认命名空间。
+
+或者可以去修改当前上下文的命名空间。具体去百度
+
+# 停止移除pod
+
+```shell
+kubectl delete pod <podName>
+```
+
+会去关闭pod内的容器，默认等待30s正常关闭，否则强制关闭，然后删除pod。
+
+## 通过标签删除
+
+```js
+kubectl delete pod -l env=trunk
+```
+
+删除所有标签带有env且值为trunk的pod
+
+## 通过命名空间删除pod
+
+pod的生命周期和所属命名空间一样
+
+```shell
+kubectl delete ns web-namespace
+```
+
+## 删除命名空间的所有pod，但不删除命名空间
+
+```shell
+kubectl delete pod --all
+```
+
+会发现，一开始用replicationController创建的pod，会自动再次生成一个新的pod，因为这个pod是交由controller管理的。
+
+## 删除命名空间的所有资源
+
+```shell
+kubectl delete all --all
+```
+
+这样就删除了pod、replicationController、service。
