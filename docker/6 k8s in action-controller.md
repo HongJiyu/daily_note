@@ -245,7 +245,7 @@ operator：
 
 ![image-20201014232425259](img\image-20201014232425259.png)
 
-如果指定多个matchExpression，则必须所有表达式未true，才能使选择器与pod匹配。
+如果指定多个matchExpression，则必须所有表达式为true，才能使选择器与pod匹配。
 
 ```yaml
   matchExpressions:
