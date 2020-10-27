@@ -8,6 +8,12 @@ text被分词例子："xiao xia mi"  =>  "xiao"  "xia" "mi"
 
 keyword不会被分词，"xiao xia mi"  => "xiao xia mi"
 
+搜索时，使用match、term。
+
+term：值不会被拆分。
+
+match：值会被拆分。
+
 # es分析器
 
 分析器（无论是内置还是自定义）只是一个包含三个较底层组件的包：字符过滤器，分词器，和词语过滤器。
@@ -76,7 +82,7 @@ https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.5.2/elas
 
 term 查询的值不会分词。只要xiao是name字段的子集，就能匹配得到。
 
-比如有个文档的值是"xiao xia mi" （text） =>  "xiao"  "xia" "mi" 那么xiao是它的自己，就会返回这个文档。
+比如有个文档的值是"xiao xia mi" （text） =>  "xiao"  "xia" "mi" 那么xiao是它的子集，就会返回这个文档。
 
 不过如果是keyword "xiao xia mi" （keyword）  => "xiao xia mi" ， "xiao" 不是它的子集，所以查不到。
 
