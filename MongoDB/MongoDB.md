@@ -304,7 +304,7 @@ db.test.find({'age':{'$not':{'$mod':[5,1]}}})
 ```js
 //null：不仅匹配自身，而且匹配不存在这个键的文档。
 db.posts.find('z',null)  //会返回z为null的文档，也会返回不包含z这个键的文档。
-db.posts.find({'z':{'$in':[null],'exists':true}})
+db.posts.find({'z':{'$in':[null],'$exists':true}})
 ```
 
 
