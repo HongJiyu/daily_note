@@ -4,7 +4,7 @@
 
 https://www.zhihu.com/question/48174633
 
-![image-20201005115844004](E:\0git_note\docker\img\image-20201005115844004.png)
+![image-20201005115844004](img\image-20201005115844004.png)
 
 隔离级别：虚拟机需要在宿主操作系统虚拟一个操作系统，而容器直接运行在宿主操作系统，进程级别。
 
@@ -61,7 +61,7 @@ docker rmi xx //删除某个image
 
 ​		构建时，Dockerfile的每一行，都会是一层。构建过程：
 
-![image-20201011105959085](E:\0git_note\docker\img\image-20201011105959085.png)
+![image-20201011105959085](img\image-20201011105959085.png)
 
 # Docker Container
 
