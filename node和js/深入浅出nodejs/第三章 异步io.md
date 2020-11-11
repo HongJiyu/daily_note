@@ -1,3 +1,11 @@
+Node的特点：
+
+事件驱动、异步io
+
+事件驱动：监听事件的变化来进行应用的流程控制。
+
+异步io：网络模型。
+
 # 前提
 
 阻塞和非阻塞：
@@ -37,4 +45,27 @@ linux下存在，但是仅支持内核io中的O_DIRECT方式读取，导致无�
 
 实际还是通过线程池实现的异步io，
 
-![image-20201110092145802](D:\note\node和js\深入浅出nodejs\image\image-20201110092145802.png)
+- 通过让部分线程进行阻塞io或者非阻塞io加轮询技术完成数据获取。
+- 让一个线程进行计算处理
+- 通过线程之间的通信将io得到的数据进行传递，实现异步io。
+
+![image-20201111205623558](E:\0git_note\node和js\深入浅出nodejs\image\image-20201111205623558.png)
+
+# Node的异步io
+
+1. 事件循环
+
+2. 观察者（可以简单理解为队列或数组）
+
+3. 请求对象
+4. io线程池
+
+windows下主要通过iocp向系统内核发送io调用和从内核获取已完成的io操作。而linux则通过epoll实现这个过程。
+
+# Node非io的异步api
+
+1. 定时器：setTimeout和setInterval =》红黑树存储。
+2. nextTick：数组。
+
+3. setImmediate：链表。每次只执行一个，例子：用nextTick插入。
+4. promise
