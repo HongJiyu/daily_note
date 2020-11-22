@@ -1,3 +1,0 @@
-promise ： 深入浅出
-async ：https://www.cnblogs.com/blowing00/p/12469552.html ，async 函数本质上就是内置了执行器的 generator 函数，只不过 NodeJS 引擎帮我们实现了执行器。当我们调用 async 函数时，引擎内部调用了执行器。
-await ：类似yield
