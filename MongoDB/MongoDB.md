@@ -247,6 +247,41 @@ db.food.save(one)
 
 ```
 
+### 对数组文档更新操作（增删改）
+
+场景：如果集合中无记录，在集合中增加一行记录，该记录内有一个文档数组，文档有一个唯一id，不允许重复。如果有记录，则只在数组中增加文档。（数组文档字段没法添加唯一索引）
+
+```js
+try{
+    //设置gate、type为唯一索引
+    db.collection.updateOne(
+        {gate,type,'arrayName.id':{$ne:idValue}},
+        {$push:{objectValue}},
+        {upsert:true} )
+}
+catch(){
+    return 'id必须唯一';
+}
+```
+
+- 集合无记录，直接新增，且数组push了objectValue。
+- 集合有记录，新增的objectValue的idValue无重复，直接push。
+- 集合有记录，新增的objectValue的idValue重复，`{gate,type,'arrayName.id':{$ne:idValue}}`不符合条件，会走upsert 新增记录，但是gate和type是唯一索引，所以报错，捕获，因此符合以上所需的场景。
+
+
+
+将第一个符合条件的文档，它的数组中的所有内嵌文档，删除所有fieldName为value的内嵌文档。
+
+```js
+db.collection.updateOne(options,{$pull:{"arrayName":{fieldName:value}}})
+```
+
+将第一个符合条件的文档，它的数组中的所有内嵌文档，存在fieldName值为value的一个内嵌文档，则将这个内嵌文档更新为object。
+
+```js
+db.collection.updateOne({option,'arrayName.fieldName':value},{'$set':{'arrayName.$':object}})
+```
+
 
 
 ## 查找
@@ -333,6 +368,8 @@ db.food.findOne({},{'fruit':{'$slice':2}}) //查询出来的文档的fruit数组
 db.food.insert({'name':'apple','other':{'other1':11,'other2':22}})
 //查找内嵌文档，顺序颠倒，查找不到。
 db.food.find({'other':{'other2':22,'other1':11}})
+//换种写法，只查other2，能查到。
+db.food.find({'other.other2':11}) 
 ```
 
 **其他区别**
@@ -340,18 +377,15 @@ db.food.find({'other':{'other2':22,'other1':11}})
 ```js
 //插入数据
 db.food.insert({'name':'apple','other':{'other1':11,'other2':22}})
-//查询
 //查询到上面的语句
 db.food.find({"other.other1":11});
 //查询的是other的值为{other:11}的文档，而不是other.other1为11.
 db.food.find({other:{other1:11}});
 ```
 
-
-
 #### $elemMatch
 
-查询**数组里面的内嵌文档**，要求这个文档符合条件才返回，而不是所有内嵌文档有一点符合才返回。
+查询**数组里面的内嵌文档**，要求这个内嵌文档符合所有条件才返回，而不是文档中的所有内嵌文档符合点加起来符合才返回。
 
 ```js
 db.food.insert({
@@ -371,7 +405,7 @@ db.food.insert({
     ]
 })
 场景：要求内嵌文档中，有内嵌文档符合author是joe并且score大于或者等于5的文档。
-使用：以下语句会返回上面的两个文档，因为查询条件在两个内嵌文档都能找到对应符合的属性，所以能返回。
+使用：以下语句会返回上面的个文档，因为查询条件在两个内嵌文档都能找到对应符合的属性，所以能返回。
 db.food.find({
     'comments.author': 'joe',
     'comments.score': {
