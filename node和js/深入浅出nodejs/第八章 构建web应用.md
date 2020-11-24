@@ -22,4 +22,74 @@ http.createServer(app).listen(1337);
 
 请求路径在req.url
 
+# cookie
+
 cookie在req.headers.cookie （第三方cookie）
+
+- 减少cookie大小
+- 静态组件用不同的域名，dns缓存
+
+其他看安全下的cookie
+
+# session
+
+session 存储在服务端，因此需要客户端和服务段的数据对应起来（服务端根据客户端传递的信息，在服务端找到对应的session）。
+
+- 基于cookie实现关联，cookie存储session的口令。（依赖cookie）
+- url带上session_id实现关联，如果没有则新生成后返回302和location，浏览器会重新跳转。（其他人拿到session_id，就能拥有别人的身份）
+
+session存储在服务端内存，存在问题：
+
+- 用户激增，内存不够用。
+- 服务为了利用多核cpu启动多个进程，进程所占内存互不通，不能直接共享。
+
+session安全：
+
+- 防止伪造：session随机算法可能存在一定规律，让黑客查询到可能的结果，以获取正确的session进而获取用户在服务器上的信息。（只防止伪造，黑客拿到正确的session，那么就无法阻止了）
+
+![image-20201124164009107](D:\note\node和js\深入浅出nodejs\image\image-20201124164009107.png)
+
+如果私钥还包含用户特定信息，那么即使黑客拿到原值和签名，那也无法被破解。比如：用户ip和用户代理等。
+
+- csrf ：看安全
+- xss：看安全
+
+# 前端资源缓存
+
+- expires或Cache-Control
+- 配置ETags
+- 让Ajax可缓存
+
+## 缓存操作
+
+浏览器访问服务器，并将静态资源缓存在本地目录中，等第二次请求时，会判断该文件能够继续被使用，可以的化，就不会再向服务器获取新的资源。
+
+If-Modified-Since（时间，秒级别）：浏览器将该属性放在头部请求服务器，请求的文件stat的mtime（node查看文件的属性），发现两者匹配，表示文件没改变过。因此返回304。则浏览器直接使用本地版本。
+
+使用秒级别的时间存在问题：
+
+- 时间改变，内容不一定改变。
+- 秒级别，如果文件在0.5s内改动，那时间还是原来的时间，会让客户端以为时间没变，即认为内容没变。
+
+解决：使用ETag：服务器生成-文件内容的散列值。
+
+请求和响应属性：
+
+If-Modified-Since/Last-Modified
+
+If-None-Match/ETag
+
+浏览器第一次访问，服务器会返回ETag。浏览器第二次访问，将之前的ETag值放在If-None-Match（头部
+
+）中进行请求。
+
+以上还是会发起http请求，以求判断是否需要使用本地缓存，最好的办法时连请求都不发。
+
+## 缓存优化
+
+在YSlow规则里：在响应里设置Expires或Cache-Control头，浏览器将根据该值进行缓存。
+
+Expires是一个GMT格式的时间字符串
+
+
+
