@@ -64,7 +64,7 @@ session安全：
 
 浏览器访问服务器，并将静态资源缓存在本地目录中，等第二次请求时，会判断该文件能够继续被使用，可以的化，就不会再向服务器获取新的资源。
 
-If-Modified-Since（时间，秒级别）：浏览器将该属性放在头部请求服务器，请求的文件stat的mtime（node查看文件的属性），发现两者匹配，表示文件没改变过。因此返回304。则浏览器直接使用本地版本。
+If-Modified-Since（时间，秒级别）：浏览器将该属性放在头部请求服务器，请求的文件stat的mtime（node查看文件的属性），发现两者匹配，表示文件没改变过。**因此返回304**。则浏览器直接使用本地版本。
 
 使用秒级别的时间存在问题：
 
@@ -89,7 +89,100 @@ If-None-Match/ETag
 
 在YSlow规则里：在响应里设置Expires或Cache-Control头，浏览器将根据该值进行缓存。
 
-Expires是一个GMT格式的时间字符串
+Expires是一个GMT格式的时间字符串，只要在这个值过期前都从本地拿取缓存。不过因为是一个确切的时间，如果客户端和服务端时间不一致，那么会出现问题。（客户端比服务端慢，客户端晚到达时间，那么晚的时间，其实服务端已经更新了文件）
 
+Cache-Control：设置了max-age值，是过多久之后时间过期，是一个时间段，而不是时刻。
 
+max-age会覆盖expires
+
+## 清除缓存
+
+缓存是以url来缓存的，因此url改变，就会重新从服务器获取资源。
+
+以多益官网为例，就是采用的cache-control和etag。
+
+cache-control：no-cache，max-age
+
+no-cache：每次都去检验。
+
+etag：该资源的内容的hash。
+
+以下是访问同一个资源文件：
+
+![image-20201124225008206](E:\0git_note\node和js\深入浅出nodejs\image\image-20201124225008206.png)
+
+前面几次都是200，因为谷歌浏览器设置了disable cache。后面几次304是将disable cache去掉，由前面说的，校验到资源未变动，采用本地缓存资源，服务器返回304。后面又变成200，是因为资源缓存是依赖url的，url变动了（后面多了参数），所以又变成200。后续继续访问，又变成304了。
+
+# 数据上传
+
+http模块只对头部进行了解析，判断是否有内容需要用户自行接收和解析。通过transfer-Encoding或content-length即可判断你请求中是否带有内容（请求体，而非路径参数和query参数）。
+
+不过在HTTP_Parser解析报头结束后，报文内容会通过data事件触发，我们只需要以流的方式处理即可。
+
+![image-20201124231602093](E:\0git_note\node和js\深入浅出nodejs\image\image-20201124231602093.png)
+
+实践：看看req.rawBody是否存在对象。
+
+## 表单数据
+
+application/x-www-form-urlencoded
+
+`querystring.parse(req.rawBody)`
+
+## json
+
+application/json
+
+`JSON.parse(req.rawBody)`
+
+## xml
+
+xml2js模块。
+
+## 文件
+
+multipart/form-data;boundary=AaB03x。
+
+Content-Length
+
+boundary：指定每部分内容的分界，报文体内容开头：在boundary前面添加--为开头，报文结束时在它前后都加上--表示结束。
+
+```js
+--AaB03x\r\n 
+Content-Disposition: form-data; name="username"\r\n 
+\r\n 
+Jackson Tian\r\n 
+--AaB03x\r\n 
+Content-Disposition: form-data; name="file"; filename="diveintonode.js"\r\n 
+Content-Type: application/javascript\r\n 
+\r\n 
+ ... contents of diveintonode.js ... 
+--AaB03x--
+```
+
+已知格式，解析就容易多了，但是未知数据量，需要谨慎。
+
+formidable模块，它基于流式处理解析报文，将接收到的文件写入到系统的临时文件夹中，并返回对应的路径：
+
+```js
+var formidable = require('formidable'); 
+function (req, res) { 
+ if (hasBody(req)) { 
+ if (mime(req) === 'multipart/form-data') { 
+ var form = new formidable.IncomingForm(); 
+ form.parse(req, function(err, fields, files) { 
+ req.body = fields; 
+ req.files = files; 
+ handle(req, res); 
+ }); 
+ } 
+ } else { 
+ handle(req, res); 
+ } 
+}
+```
+
+因此只需要检查req.body和req.files中的内容即可。
+
+# 数据上传与安全
 
