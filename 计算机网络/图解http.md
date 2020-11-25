@@ -411,6 +411,8 @@ gzip、compress、deflate、identity
 
 ### Content-Length
 
+https://www.cnblogs.com/nxlhero/p/11670942.html
+
 表明实体主体部分的大小（单位是字节）
 
 对实体进行内容编码传输时，不再使用Content-Length首部字段。

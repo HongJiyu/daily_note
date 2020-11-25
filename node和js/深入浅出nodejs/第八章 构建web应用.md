@@ -109,7 +109,7 @@ etag：该资源的内容的hash。
 
 以下是访问同一个资源文件：
 
-![image-20201124225008206](E:\0git_note\node和js\深入浅出nodejs\image\image-20201124225008206.png)
+![image-20201124225008206](image\image-20201124225008206.png)
 
 前面几次都是200，因为谷歌浏览器设置了disable cache。后面几次304是将disable cache去掉，由前面说的，校验到资源未变动，采用本地缓存资源，服务器返回304。后面又变成200，是因为资源缓存是依赖url的，url变动了（后面多了参数），所以又变成200。后续继续访问，又变成304了。
 
@@ -119,7 +119,7 @@ http模块只对头部进行了解析，判断是否有内容需要用户自行�
 
 不过在HTTP_Parser解析报头结束后，报文内容会通过data事件触发，我们只需要以流的方式处理即可。
 
-![image-20201124231602093](E:\0git_note\node和js\深入浅出nodejs\image\image-20201124231602093.png)
+![image-20201124231602093](image\image-20201124231602093.png)
 
 实践：看看req.rawBody是否存在对象。
 
@@ -162,7 +162,7 @@ Content-Type: application/javascript\r\n
 
 已知格式，解析就容易多了，但是未知数据量，需要谨慎。
 
-formidable模块，它基于流式处理解析报文，将接收到的文件写入到系统的临时文件夹中，并返回对应的路径：
+formidable模块，它基于流式处理解析报文，**将接收到的文件写入到系统的临时文件夹中**，并返回对应的路径：
 
 ```js
 var formidable = require('formidable'); 
@@ -186,3 +186,18 @@ function (req, res) {
 
 # 数据上传与安全
 
+- 内存限制
+
+  Connect采用req.on('data') 逐块录入。
+
+- csrf
+
+# 路由解析
+
+略
+
+# 中间件
+
+中间件，**就是由数组保存，然后通过递归调用**。这也是为什么每个中间件，都需要next()，同时还是洋葱模型。
+
+![image-20201125193909266](D:\note\node和js\深入浅出nodejs\image\image-20201125193909266.png)
