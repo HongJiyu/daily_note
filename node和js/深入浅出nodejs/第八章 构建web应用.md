@@ -201,3 +201,57 @@ function (req, res) {
 中间件，**就是由数组保存，然后通过递归调用**。这也是为什么每个中间件，都需要next()，同时还是洋葱模型。
 
 ![image-20201125193909266](D:\note\node和js\深入浅出nodejs\image\image-20201125193909266.png)
+
+# 异常处理
+
+异步的异常处理没看懂，在递归里面。
+
+# 页面渲染
+
+content-type：报文头上的content-type指明了报文内容的类型，它的值是mime。接收方会根据这个mime值去做对应的处理。
+
+在node中，require('minme'); mime.lookup('txt')  即可查看这个文件类型的mime值。
+
+## 响应
+
+附件下载：
+
+```js
+fs.stat(filepath, function(err, stat) {
+     var stream = fs.createReadStream(filepath);
+     // 设置内容
+     res.setHeader('Content-Type', mime.lookup(filepath));
+    ܈设置长 //
+     res.setHeader('Content-Length', stat.size);
+     // 设置为附件
+     res.setHeader('Content-Disposition' 'attachment; filename="' +path.basename(filepath) + '"');
+     res.writeHead(200);
+     stream.pipe(res);
+ });
+```
+
+响应json
+
+```js
+res.json = function (json) {
+ res.setHeader('Content-Type', 'application/json');
+ res.writeHead(200);
+ res.end(JSON.stringify(json));
+}; 
+```
+
+响应跳转
+
+```js
+res.redirect = function (url) {
+ res.setHeader('Location', url);
+ res.writeHead(302);
+ res.end('Redirect to ' + url);
+}; 
+```
+
+## 模板渲染
+
+略
+
+## Bigpipe
