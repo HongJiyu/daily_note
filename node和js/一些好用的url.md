@@ -9,3 +9,7 @@ child_process:https://www.cnblogs.com/chyingp/p/node-learning-guide-child_proces
 node指南：https://www.bookstack.cn/read/nodejs-guide/%E4%B8%80%E8%88%AC%E6%8C%87%E5%8D%97.md
 
 node调试指南：https://www.bookstack.cn/read/node-in-debugging/2.2heapdump.md
+
+Node.js：来一打 C++ 扩展
+
+Node.js实战（第二版） 译者：吴海星

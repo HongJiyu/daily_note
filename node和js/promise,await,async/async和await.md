@@ -59,3 +59,23 @@ function* test() {
 ```
 
 以上只是一个大概，只需要知道async和await ，其实内部还是通过 generator和promise实现的。
+
+# 总结
+
+```js
+async function test() {
+  const result = await one();
+  console.log('test');
+  return 20;
+}
+```
+
+这个函数test函数中，one可以是一整条异步链。通过promise实现异步链的顺序。
+
+而await也可以看作yield，通过next（）函数，保证console.log不会先于one函数执行。因为要在one返回的是promise，在promise.then() 里面才执行next（）函数。
+
+
+
+promise 保证这一整条异步链的执行顺序。
+
+yield保证这个函数的执行顺序。（其实也是通过promise包着next（）方法）

@@ -15,9 +15,9 @@
 vim /etc/network/interfaces
 
 iface enp3s inet static  //修改
-address 你要配置成的IP //添加
-netmask 看情况 //添加
-gateway 看情况  //添加
+address 你要配置成的IP //添加，与主机ip前3个字节一致
+netmask 看情况 //添加，255.255.252.0不确定
+gateway 看情况  //添加，与主机ip前3个字节一致，最后一个字节是1
 
 vim /etc/resolvconf/resolv.conf.d/base
 添加
