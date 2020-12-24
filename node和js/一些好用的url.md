@@ -17,3 +17,5 @@ Node.js实战（第二版） 译者：吴海星
 Benchmark：工具，检验写法性能。
 
 你不知道的nodejs性能优化 ：https://cnodejs.org/topic/5bf665bce6481c5709f5e453
+
+ali的gc：https://developer.aliyun.com/article/592878、https://developer.aliyun.com/article/592880
