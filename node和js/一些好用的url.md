@@ -9,3 +9,7 @@ child_process:https://www.cnblogs.com/chyingp/p/node-learning-guide-child_proces
 node指南：https://www.bookstack.cn/read/nodejs-guide/%E4%B8%80%E8%88%AC%E6%8C%87%E5%8D%97.md
 
 node调试指南：https://www.bookstack.cn/read/node-in-debugging/2.2heapdump.md
+
+node 内存泄漏：https://www.cnblogs.com/youlechang123/p/6784337.html
+
+nvm 问题：https://www.cnblogs.com/CF1314/p/13926068.html
