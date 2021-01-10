@@ -49,7 +49,7 @@ linux下存在，但是仅支持内核io中的O_DIRECT方式读取，导致无�
 - 让一个线程进行计算处理
 - 通过线程之间的通信将io得到的数据进行传递，实现异步io。
 
-![image-20201111205623558](E:\0git_note\node和js\深入浅出nodejs\image\image-20201111205623558.png)
+![image-20201111205623558](image\image-20201111205623558.png)
 
 # Node的异步io
 

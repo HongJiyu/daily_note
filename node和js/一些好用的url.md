@@ -13,3 +13,15 @@ node调试指南：https://www.bookstack.cn/read/node-in-debugging/2.2heapdump.m
 node 内存泄漏：https://www.cnblogs.com/youlechang123/p/6784337.html
 
 nvm 问题：https://www.cnblogs.com/CF1314/p/13926068.html
+
+Node.js：来一打 C++ 扩展
+
+Node.js实战（第二版） 译者：吴海星
+
+Benchmark：工具，检验写法性能。
+
+你不知道的nodejs性能优化 ：https://cnodejs.org/topic/5bf665bce6481c5709f5e453
+
+ali的gc：https://developer.aliyun.com/article/592878、https://developer.aliyun.com/article/592880
+
+egg-core 源码分析：https://zhuanlan.zhihu.com/p/47178799
