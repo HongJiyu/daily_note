@@ -93,10 +93,12 @@ redo log buffer
 
 innodb会先将日志信息放入到这个重做日志缓冲区，然后按一定频率刷新到磁盘的重做日志。重做日志缓冲区大小`innodb_log_buffer_size`
 
-默认是8MB，通常情况满足条件。
+默认是8MB，通常情况满足需求。
+
+刷盘时间：
 
 - master thread 每一秒刷新一次。
-- 每个事务提交也会刷新
+- 每个事务提交也会刷新（一个参数控制`innodb_flush_log_at_trx_commit`，具体看后面）。
 - 剩余空间小于1/2，也会刷新。
 
 ## 额外内存池
@@ -220,3 +222,9 @@ innodb存储引擎会监控对表上各索引页的查询。如果观察到建�
 当刷新脏页，innodb会检测该页所在的区的所有页，如果是脏页，则一起刷新。通过io写入操作合并为一个io操作。 `innodb_flush_neighbors`来控制是否启用。对于固态硬盘有超高的iops性能的磁盘，建议设置为0，即关闭。
 
 ## 启动、关闭与恢复
+
+这里是指对innodb的启动、关闭与恢复。P59
+
+`innodb_fast_shutdown`
+
+`innodb_force_recovery`
