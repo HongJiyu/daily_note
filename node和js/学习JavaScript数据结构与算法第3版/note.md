@@ -67,6 +67,10 @@ size：返回栈的元素个数。
 
 ![image-20210124161145968](D:\note\node和js\学习JavaScript数据结构与算法第3版\img\image-20210124161145968.png)
 
+**解决问题：**
+
+两个栈实现浏览器的前进和回退功能。
+
 # 队列和双端队列
 
 队列所需要的方法：
@@ -95,5 +99,27 @@ size：个数
 
 - 击鼓传花，关键代码： queue.enqueue(queue.dequeue); 构成一个循环。
 
+# 链表
 
+**单向链表** 需要两个类：LinkedList（head，eqFun，count）、Node（next，element）
+
+```js
+push ：向链表尾部添加元素
+insert：向指定索引位置添加元素
+getElementAt：获取指定索引位置的元素
+removeAt：删除指定位置的元素
+remove：删除值为xx的元素，比较取决于eqFun
+indexOf：返回元素所在链表的索引，比较取决于eqFun
+isEmpty
+siez
+toString
+```
+
+心得：对链表某个节点的增删操作，都需要获得上一个节点的引用。
+
+**双向链表**：多了prev指针。
+
+**循环链表**：head的prev指向tail，tail的next指向head
+
+**有序链表**：需要compareFun比较大小
 
