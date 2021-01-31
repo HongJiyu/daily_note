@@ -1,6 +1,7 @@
 - 找到文件的绝对路径。
-
 - 加载文件。
+
+![image-20210131150049754](D:\note\node和js\require的源码\img\image-20210131150049754.png)
 
 # 文件加载前提：
 
@@ -189,9 +190,7 @@ Module._findPath = function(request, paths) {
 };
 ```
 
-
-
-modulePaths 的初始化（3个目录）：
+## modulePaths 的初始化（3个目录）：
 
 ```js
 Module._initPaths = function() {
@@ -222,7 +221,7 @@ Module._initPaths = function() {
 - 用户目录
 - node_path配置的目录
 
-_nodeModulePaths：相对路径且无父路径
+## _nodeModulePaths：相对路径且无父路径
 
 ```js
 Module._nodeModulePaths = function(from) {
