@@ -1,3 +1,5 @@
+源码地址：https://github.com/nodejs/node-v0.x-archive/blob/master/lib/module.js
+
 - 找到文件的绝对路径。
 - 加载文件。
 

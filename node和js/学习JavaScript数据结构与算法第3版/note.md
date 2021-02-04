@@ -123,3 +123,47 @@ toString
 
 **有序链表**：需要compareFun比较大小
 
+# 集合
+
+set，没有可用的并集、交集、差集和子集判断。
+
+只能自己实现。
+
+常用的方法
+
+```js
+set.has(xx);
+[...set];
+set.forEach();
+```
+
+ES2015 提供了Set
+
+# 字典和散列表
+
+字典： 
+
+```js
+{
+	key.toString():{
+        key:key
+        value:value
+    }    
+}
+```
+
+散列表：
+
+```js
+{
+    key.hasCode():{
+        key:key
+        value:value
+    }   
+}
+```
+
+ES2015还提供了Map和WeakMap
+
+- WeakSet和WeakMap没有entries、keys和values
+- 只能用对象作为键
