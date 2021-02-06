@@ -167,3 +167,30 @@ ES2015还提供了Map和WeakMap
 
 - WeakSet和WeakMap没有entries、keys和values
 - 只能用对象作为键
+
+# 递归
+
+- 必须要有停止点，不然会无限递归下去。
+
+- 主要调用栈的大小限制（操作系统和浏览器不同而有差异）
+
+- ECMAScript 2015 有尾调用优化（tail call optimization）。如果函数内的最后一个操作是调用
+
+  函数（就像示例中加粗的那行），会通过“跳转指令”（jump）而不是“子程序调用”（subroutine 
+
+  call）来控制。
+
+```js
+// 斐波那契（递归+记忆）
+function fibonacciMemoization(n) { 
+ const memo = [0, 1]; // {1} 
+ const fibonacci = (n) => { 
+ if (memo[n] != null) return memo[n]; // {2} 
+ return memo[n] = fibonacci(n - 1, memo) + fibonacci(n - 2, memo); // {3} 
+ }; 
+ return fibonacci; 
+}
+```
+
+总结：递归并不是最快，直接遍历更快。直接遍历在有些场景会不适用。递归代码更简单。
+
