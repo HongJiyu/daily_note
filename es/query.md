@@ -16,6 +16,12 @@ https://www.elastic.co/guide/en/elasticsearch/guide/current/phrase-matching.html
 
 文档既要包含要查询的text的所有词，同时相对位置不能够变化。
 
+For a document to be considered a match for the phrase “quick brown fox”, the following must be true:
+
+- `quick`, `brown`, and `fox` must all appear in the field.
+- The position of `brown` must be `1` greater than the position of `quick`.
+- The position of `fox` must be `2` greater than the position of `quick`.
+
 ## match_phrase_prefix
 
 它在match_phrase的基础上，还允许最后一个词是前缀匹配
