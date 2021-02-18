@@ -20,9 +20,9 @@ slice 是截取一段，而splice是拼接。
 
 **数组方法：**
 
-![image-20210124144826284](D:\note\node和js\学习JavaScript数据结构与算法第3版\img\image-20210124144826284.png)
+![image-20210124144826284](img\image-20210124144826284.png)
 
-![image-20210124144804252](D:\note\node和js\学习JavaScript数据结构与算法第3版\img\image-20210124144804252.png)
+![image-20210124144804252](img\image-20210124144804252.png)
 
 **数组排序：**
 
@@ -65,7 +65,7 @@ size：返回栈的元素个数。
 - 使用Symbol，不过ES2015提供了Object.getOwnPropertySymbols 方法，因此也会被破坏。
 - 使用WeakMap实现类。
 
-![image-20210124161145968](D:\note\node和js\学习JavaScript数据结构与算法第3版\img\image-20210124161145968.png)
+![image-20210124161145968](img\image-20210124161145968.png)
 
 **解决问题：**
 
@@ -193,4 +193,47 @@ function fibonacciMemoization(n) {
 ```
 
 总结：递归并不是最快，直接遍历更快。直接遍历在有些场景会不适用。递归代码更简单。
+
+# 树 
+
+深度：从上往下数 ，从0开始
+
+高度：从下往上数，从0开始
+
+**二叉搜索树**
+
+```js
+class Node { 
+ constructor(key) { 
+ this.key = key; // {1} 节点值
+ this.left = null; // 左侧子节点引用
+ this.right = null; // 右侧子节点引用
+ } 
+}
+
+class BinarySearchTree {
+ constructor(compareFn = defaultCompare) { 
+ this.compareFn = compareFn; // 用来比较节点值
+ this.root = null; // {1} Node 类型的根节点
+ }
+
+//insert(key)：向树中插入一个新的键。需要递归判断插入
+//search(key)：在树中查找一个键。如果节点存在，则返回 true；如果不存在，则返回false。 
+//inOrderTraverse()：通过中序遍历方式遍历所有节点。 （左中右）
+//preOrderTraverse()：通过先序遍历方式遍历所有节点。 （中左右）
+//postOrderTraverse()：通过后序遍历方式遍历所有节点。 （左右中）
+//min()：返回树中最小的值/键。遍历即可
+//max()：返回树中最大的值/键。遍历即可
+//remove(key)：从树中移除某个键。 使用compareFn方法比较。删除节点时，要判断是否有左右节点，四种情况。
+    //无左右节点，return null即可。
+    //只有左节点或者只有右节点，则直接return 这个左/右节点即可。
+    //有左右节点，则获取右子树的最小值节点，替换掉要删除的节点。然后在右子树删除掉该最小值节点即可。
+```
+
+**avl树**（p187）
+
+- 出现ll ：节点的左子节点右旋
+- 出现lr：节点的左子节点左旋，再右旋
+- 出现rr：节点的右子节点左旋
+- 出现rl：节点的右子节点右旋，再左旋
 
