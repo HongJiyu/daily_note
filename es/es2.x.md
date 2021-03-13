@@ -1,1 +1,0 @@
-https://www.elastic.co/guide/en/elasticsearch/reference/2.4/_basic_concepts.html

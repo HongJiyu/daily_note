@@ -25,3 +25,5 @@ Benchmark：工具，检验写法性能。
 ali的gc：https://developer.aliyun.com/article/592878、https://developer.aliyun.com/article/592880
 
 egg-core 源码分析：https://zhuanlan.zhihu.com/p/47178799
+
+easy-monitor：https://www.yuque.com/hyj1991/easy-monitor
