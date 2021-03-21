@@ -1,0 +1,6 @@
+leaf fields 和 object fields
+stored fields  和 metadata fields
+
+"inline": "ctx._source.counter += params.count",
+"script" : "params['_source']['message']"
+"inline": "doc['my_field_name'].value * 2"
