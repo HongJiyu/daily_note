@@ -1,4 +1,4 @@
-ECMA 是一个将信息标准化的组织，而ECMAScript是一个语言标准，JavaScipt是该标准（最流行）的一个实现。
+。ECMA 是一个将信息标准化的组织，而ECMAScript是一个语言标准，JavaScipt是该标准（最流行）的一个实现。
 
 # 数组
 
