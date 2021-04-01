@@ -474,7 +474,7 @@ db.collectionName.find( { xxx:/hjy/i } )
 mongoose
 
 ```js
-db.collectionName.find({ xxx: new Regex('hjy','i')})
+db.collectionName.find({ xxx: new RegExp('hjy','i')})
 ```
 
 ## 批量写操作
