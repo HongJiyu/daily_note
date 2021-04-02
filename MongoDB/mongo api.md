@@ -33,3 +33,25 @@ unionWith a Sharded Collection  这小节没看懂
 ## $sample
 
 ## $replaceRoot
+
+## $replaceWith
+
+## $out
+
+## $match
+
+## $indexStats
+
+
+
+跳过
+
+$redact
+
+$planCache
+
+$merge
+
+$lookup
+
+$listSessions
