@@ -1,3 +1,13 @@
+# 串行执行
+
+必须是以promise开头
+
+then里面的成功函数必须是return promise
+
+catch后可以继续then函数
+
+reject和catch应该是一个意思，都是捕获错误。
+
 # 简单的Promise
 
 Promise的api
@@ -169,4 +179,6 @@ readFile1('E:\\0nodejsworkspace\\test\\promise\\file1.txt', 'utf8')
 
 在事件循环中，promise.resolve() ，会在该次事件循环（6个阶段都执行完）后再执行process.nextTick和promise.resolve。（指北这么说的）。
 
-Promise能够实现异步，也就是不阻塞其他请求。其实是事件循环的原因。promise能够继续下去，其实是依靠异步回调，也就是resolve()。
+Promise能够实现异步，也就是不阻塞其他请求。其实是事件循环的原因。promise能够继续下去，其实是依靠异步回调，也就是调用resolve()。
+
+promise本质上也只是一个流程控制器。
