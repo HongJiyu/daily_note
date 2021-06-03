@@ -111,3 +111,85 @@ configure执行成功会生成objs目录，并在该目录下产生以下目录�
 
 以上路径都可在configure阶段通过参数配置
 
+## 启动
+
+1. 直接执行nginx二进制程序
+
+/usr/local/nginx/sbin/nginx
+
+读取默认路径下的配置文件： /usr/local/nginx/conf/nginx.conf
+
+没有显示指定时，将打开configure命令执行时的--config-path=Path  指定的nginx.config文件
+
+2. 指定配置文件的启动方式
+
+/usr/local/nginx/sbin/nginx -c tmp.conf
+
+3. 指定安装目录的启动方式
+
+/url/local/nginx/sbin/nginx -p /usr/local/nginx/
+
+4. 指定全局配置项的启动方式（略）
+
+/usr/local/nginx/sbin/nginx -g "pid varnginx/test.pid"
+
+## 检查配置信息
+
+/usr/local/nginx/sbin/nginx -t
+
+可以不把error级别以下的信息输出
+
+/usr/local/nginx/sbin/nginx -t -q
+
+## 显示版本信息
+
+/usr/loca/nginx/sbin/nginx -v
+
+## 显示编译阶段的参数
+
+显示GCC编译器版本、操作系统版本、执行configure时的参数
+
+/usr/local/nginx/sbin/nginx -V
+
+## 快速停止服务
+
+/usr/local/nginx/sbin/nginx -s stop
+
+强制停止nginx ，-s nginx程序向nginx服务发送信号量，nginx程序通过nginx.pid文件找到master进行的id，再向运行中的master进程发送term信号快速关闭nginx。
+
+因此同理，可以通过`ps -ef|grep nginx `找到进程id
+
+然后向该进程发送term信号：`kill -s SIGTERM <master pid>` 或`kill -s SIGINT <master pid>`
+
+## 优雅停止服务
+
+/usr/local/nginx/sbin/nginx -s quit
+
+或 ：`kill -s SIGQUIT <master pid>`
+
+优雅地停止worker进行
+
+`kill -s SIGWINCH <worker pid>`
+
+## 配置生效
+
+/usr/local/nginx/sbin/nginx -s reload
+
+或： `kill -s SIGHUP <master pid>`
+
+事实上，nginx会先检查配置是否有误，无误则优雅关闭，再重启nginx。
+
+## 日志回滚
+
+场景：把当前日志文件改名或转移，使得重新生成一份日志文件，使得日志文件不至于过大。
+
+/usr/local/ngin/sbin/nginx -s open
+
+或： `kill -s SIGUSR1 <nginx master pid>`
+
+## 平滑升级nginx
+
+- 向旧版本地nginx发送USR2信号，`kill -s SIGUSR2 <master pid>` ，这时nginx会将pid重命名，/usr/local/nginx/logs/nginx.pid 重命名为 /usr/local/nginx/logs/nginx.pid.oldbin 这样新的nginx才有可能启动成功
+- 启动新版本的nginx，可以发现新旧版本的nginx同时运行。
+- 通过kill命令向旧版本的master发送SIGQUIT信号，以优雅的方式关闭旧版本的nginx。
+
