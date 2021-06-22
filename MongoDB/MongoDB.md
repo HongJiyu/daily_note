@@ -165,7 +165,8 @@ db.drop_collection("集合名") //删除集合和索引。
 $push
 
 ```js
-$push db.posts.update({'title':'title1'},{"$push":{"array":"hjy"}})//给符合条件的第一个文档的array属性push一个字符串'hjy'
+$push db.posts.update({
+    'title':'title1'},{"$push":{"array":"hjy"}})//给符合条件的第一个文档的array属性push一个字符串'hjy'
 db.test.update({'test':'111'},{"$push":{"array":["hjy",'hjy22','hjy333']}})//给符合条件的第一个文档的array属性push一个数组，而不是批量push，批量push则搭配$each
 ```
 
