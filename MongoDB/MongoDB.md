@@ -250,6 +250,77 @@ db.food.save(one)
 
 ### 对数组文档更新操作（增删改）
 
+#### $push $pull
+
+```js
+({filter},
+ {
+    $pull:{
+    arrayName:{
+        在这个arrayName数组中，匹配出要被删除的内嵌文档的，多个属性要使用$elemMatch
+    }
+    }
+})
+```
+
+如果是删除双重嵌套数组，数据格式如下：
+
+items是一个文档数组，其内有一个locations也是一个文档数组，这时候想要删除掉locations数组的某个文档：
+
+```js
+ {
+    "_id" : ObjectId("56464c726879571b1dcbac79"),
+    "food" : {
+        "fruit" : [
+            "apple",
+            "orange"
+        ]
+    },
+    "items" : [
+        {
+            "item_id" : 750,
+            "locations" : [
+                {
+                    "store#" : 13,
+                    "num_employees" : 138
+                },
+                {
+                    "store#" : 49,
+                    "num_employees" : 343
+                }
+            ]
+        },
+        {
+            "item_id" : 650,
+            "locations" : [
+                {
+                    "store#" : 12,
+                    "num_employees" : 22
+                },
+                {
+                    "store#" : 15,
+                    "num_employees" : 52
+                }
+            ]
+        }
+    ]
+}
+```
+
+```js
+  db.test.update(
+      {"items.item_id":650}, //使用这步过滤来指出第一层数组的哪个文档
+      {$pull:{
+          'items.$.locations':  //定位符定位到第一层数组的具体文档的locatinos属性，因为pull后面是要跟被操作的数组。即items.$.locations:定位到了具体的第二层数组
+          {'store#':12,'num_employees':22} //指明了要删除第二层数组中的哪个文档
+      }
+      })
+```
+
+具体如该文档：http://itpcb.com/a/324124
+
+#### 其他
+
 场景：如果集合中无记录，在集合中增加一行记录，该记录内有一个文档数组，文档有一个唯一id，不允许重复。如果有记录，则只在数组中增加文档。（数组文档字段没法添加唯一索引）
 
 ```js
