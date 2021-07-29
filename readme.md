@@ -1,6 +1,6 @@
 接下来：
 
-
+https://www.zhihu.com/question/30328004
 
 
 
@@ -26,6 +26,10 @@ Nginx 核心知识 100 讲
 
 
 暂时放弃：
+
+《鸟哥私房菜》  7.1章
+
+understand-nodejs
 
 深入理解 Nginx；模块开发与架构解析
 
