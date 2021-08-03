@@ -2,6 +2,12 @@
 
 https://www.zhihu.com/question/30328004
 
+《linux入门到精通》清华 配套视频
+
+https://www.bilibili.com/video/av925833332/
+
+《鸟哥私房菜》 视频
+
 
 
 - 《Unix网络编程》
