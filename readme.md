@@ -1,3 +1,11 @@
+先学c
+
+https://www.zhihu.com/question/20890307
+
+linux 看视频
+
+
+
 接下来：
 
 https://www.zhihu.com/question/30328004
@@ -10,14 +18,26 @@ https://www.bilibili.com/video/av925833332/
 
 
 
+再计网
+
+
+
+nodejs
+
+流：https://juejin.cn/post/6844903543678189576 （以及涉及的书）
+
+
+
+
+
+其他
+
 - 《Unix网络编程》
 - 《Unix环境高级编程》
 - 《Linux高性能服务器编程》
 - 《Linux多线程服务器端编程》
 
 https://awesome-programming-books.github.io/
-
-
 
 TCP/IP 详解卷一：协议
 
