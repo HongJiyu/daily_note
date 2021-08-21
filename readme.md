@@ -1,8 +1,8 @@
-先学c
+先学c （看完基础，做学习网上的leetcode视频c编写的）
 
 https://www.zhihu.com/question/20890307
 
-linux 看视频
+linux 看视频（学习网上下载老段或者是*林夕*昱）
 
 
 
