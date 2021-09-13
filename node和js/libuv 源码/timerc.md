@@ -11,7 +11,7 @@
 - flags  它的二进制位必须是第三位不为0（ xxx00100），才表示handle活跃
 - heap_node []  存放这个时间handle指向其他三个节点的指针
 - start_id  当timeout一致时，用start_id来判断优先执行
-- timer_cb   不知道
+- timer_cb   超时回调
 - repeat  是否重新执行，像interval循环执行的。
 
 # uv_timer_init (函数)
@@ -25,4 +25,6 @@
 从堆中去掉，关闭handle
 
 # uv_timer_start （函数）
+
+# uv_timer_again （函数）
 

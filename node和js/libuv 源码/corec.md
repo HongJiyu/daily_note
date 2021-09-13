@@ -22,6 +22,10 @@ unsigned int nelts;   //节点数
 
 - void* handle_queue[2]  一个指针数组，0执行下一个，1指向上一个，在所有handle的最后一个
 
+# uv_run (函数)
+
+
+
 # uv_loop_alive（函数）
 
 有活跃的handle、有活跃的request、有需要关闭的handles， 则表示事件循环活跃
@@ -32,7 +36,39 @@ unsigned int nelts;   //节点数
 
 # uv__run_timers （函数）
 
-看一个时间handle如何放到loop的handle_queue，如何被放到heap中
+看一个时间handle如何放到loop的handle_queue，如何被放到heap中。
+
+如何处理 （已看）
+
+# uv_run_pending （函数）
+
+具体还是对queue的操作。
+
+# uv__run_idle（函数）
+
+略
+
+# uv__run_prepare（函数）
+
+略
+
+# uv_backend_timeout （函数）
+
+进io poll阶段，但是不阻塞（阻塞时间为0）有如下情况：
+
+要么是这个事件循环要终止了，要么是其他阶段有待执行，因此不能阻塞在这里。
+
+- stop_flag 不为0，即停止标志
+- 没有活跃的handle和活跃的request
+- idle_handles 为空
+- pending_queue 为空
+- closing_handles 有需要关闭的handle
+
+# uv__next_timeout (函数)
+
+计算出io poll阶段阻塞多久。
+
+
 
 # 其他
 

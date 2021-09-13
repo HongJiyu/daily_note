@@ -12,7 +12,7 @@ handle 的flags的值：
 
 略~
 
-![image-20210911145033632](D:\note\node和js\libuv 源码\image\image-20210911145033632.png)
+![image-20210911145033632](image\image-20210911145033632.png)
 
 
 
