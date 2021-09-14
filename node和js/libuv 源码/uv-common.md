@@ -2,13 +2,13 @@ handle 的flags的值：
 
 00000 0000
 
-0000 0001  handle将被关闭
+UV_HANDLE_CLOSING  0000 0001  handle将被关闭
 
-0000 0010  handle被关闭
+UV_HANDLE_CLOSED   0000 0010  handle被关闭
 
-0000 0100  handle活跃着
+UV_HANDLE_ACTIVE      0000 0100  handle活跃着
 
-0000 1000  handle被引用，即loop的active_handle的值包含它
+UV_HANDLE_REF            0000 1000  handle被引用，即loop的active_handle的值包含它
 
 略~
 

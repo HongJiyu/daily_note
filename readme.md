@@ -10,9 +10,7 @@ linux 看视频（学习网上下载老段或者是*林夕*昱）
 
 https://zhuanlan.zhihu.com/p/361303238   网易云 事件循环
 
-https://zhuanlan.zhihu.com/p/35039878   事件循环一步一步走
-
-https://blog.csdn.net/qq_27053493/article/details/98003960  libuv代码
+https://zhuanlan.zhihu.com/p/35039878   事件循环一步一步走(nextTick)
 
 https://blog.5udou.cn/#/blog/list  nodejs深入学习系列
 
