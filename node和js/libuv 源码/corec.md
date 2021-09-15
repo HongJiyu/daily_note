@@ -94,7 +94,8 @@ unsigned int nelts;   //节点数
 待细看
 
 - 通过 epoll_ctl 将所有观察者都注册到epoll中。
-- 通过 epoll_pwait 等待完成的事件
+- 通过 epoll_pwait 等待完成的事件（细看）
+  - watchers扩容+2的原因
 - 遍历结果，将完成的event的fd取出并在loop的watchers找到对应的观察者对象，进而执行这个观察者的回调函数
 
 ![image-20210914164042031](E:\dailynote\node和js\libuv 源码\image\image-20210914164042031.png)
