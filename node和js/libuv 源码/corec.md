@@ -2,7 +2,10 @@
 
 include/uv.h 的 uv_loop_s  =>  include/unix.h 的  UV_LOOP_PRIVATE_FIELDS
 
-- active_handles 活跃的handle数量
+- ```c
+  unsigned int active_handles; 活跃的handle数量
+  ```
+
 - active_reqs {count} 活跃的请求数
 
 ```c
@@ -21,12 +24,23 @@ unsigned int nelts;   //节点数
 ```
 
 - void* handle_queue[2]  一个指针数组，0执行下一个，1指向上一个，在所有handle的最后一个
+
+- ```c
+  void* pending_queue[2];  //pending阶段的队列，一个根节点，而不是头节点 
+  ```
+
 - watcher_queue 观察者队列节点
+
 - nfds    一般为watcher_queue队列节点数
+
 - backend_fd    epoll的fd
+
 - flags   标记，目前只有UV_LOOP_BLOCK_SIGPROF ,用于epoll_wait时屏蔽SIGPROF信号。（0001）
+
 - watchers  数组，根据观察者的fd值，存储对应的观察者（会比nfds大）
+
 - nwatchers   watchers数组的长度，在maybe_resize函数扩容（会比nfds大）
+
 - internal_fields 内部字段
 
 ```c
@@ -68,13 +82,16 @@ https://zhuanlan.zhihu.com/p/52161066  windows版本
 1. 在loop中找到对应的堆指针。
 2. 通过堆指针找到堆顶（堆节点）。
 3. 通过container_of 函数，堆节点基于0的地址偏移量来找到对应的时间handle（uv_timer_t）
-
 4. 从堆节点从堆中去掉，将handle取消活跃，取消引用状态，loop中的引用计数减1
-5. 
+5. 如果是重复执行的handle，则again
+6. 执行到时间的回调函数
 
 ## uv_run_pending （函数）
 
-具体还是对queue的操作。
+1. 判断是否为空
+2. 将pending_queue除了根节点外的其余节点，放到一个新的根节点下。
+3. 然后遍历新的根节点。
+4. 
 
 ## uv__run_idle（函数）
 
@@ -86,18 +103,21 @@ https://zhuanlan.zhihu.com/p/52161066  windows版本
 
 ## uv_backend_timeout （函数）
 
-进io poll阶段，但是不阻塞（阻塞时间为0）有如下情况：
+timeout默认为0，不阻塞。需要去计算io poll阶段阻塞时间的前提条件有两种：
 
-要么是这个事件循环要终止了，要么是其他阶段有待执行，因此不能阻塞在这里。
+- 只执行一次事件循环（UV_RUN_ONCE），并且前面pending阶段不为空（只执行一次事件循环应该是两轮，pending阶段不为空表示第二轮）
 
-- 只执行一次事件循环（UV_RUN_ONCE），并且pending阶段不为空（只执行一次事件循环应该是两轮，pending阶段不为空表示第二轮）
-- 事件类型为UV_RUN_NOWAIT。
+- 默认模式（UV_RUN_DEFAULT）
 
-- stop_flag 不为0，即停止标志（要关闭事件循环）
-- 没有活跃的handle和活跃的request（要关闭事件循环）
-- idle_handles 为空（要关闭事件循环）
-- pending_queue 为空（要关闭事件循环）
-- closing_handles 有需要关闭的handle（有待执行）
+timeout其他为0 的情况（要么是事件循环要关闭，要么是有handle待执行）
+
+- stop_flag 不为0，即停止标志（标志关闭，要关闭事件循环），所以timeout为0，不阻塞
+- 没有活跃的handle和活跃的request（没事情做，要关闭事件循环），所以timeout为0，不阻塞
+- idle_handles 不为空，有handle需要执行，所以timeout为0，不阻塞
+- pending_queue 不为空，有handle需要执行，所以timeout为0，不阻塞
+- closing_handles不为空，有handle需要执行，所以timeout为0，不阻塞
+
+如果不为0，则通过uv_next_timeout函数进行计算timeout
 
 ## uv__next_timeout (函数)
 
@@ -107,7 +127,17 @@ https://zhuanlan.zhihu.com/p/52161066  windows版本
 - timer堆顶执行时间到了，返回 0
 - 计算出timer堆顶与当前时间的差，与INT_MAX比较取最小的。
 
+
+
 ## uv__io_poll （函数）
+
+- timeout
+
+timeout= -1 导致epoll_wait（）无限期阻塞
+
+timeout = 0 导致epoll_wait（）立即返回，即使没有可用事件。
+
+
 
 需要结合epoll https://blog.csdn.net/yusiguyuan/article/details/15027821 一起看
 
