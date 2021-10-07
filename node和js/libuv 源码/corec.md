@@ -24,9 +24,26 @@ unsigned int nelts;   //节点数
 - watcher_queue 观察者队列节点
 - nfds    一般为watcher_queue队列节点数
 - backend_fd    epoll的fd
-- flags   标记，目前只有UV_LOOP_BLOCK_SIGPROF ,用于epoll_wait时屏蔽SIGPROF信号。
+- flags   标记，目前只有UV_LOOP_BLOCK_SIGPROF ,用于epoll_wait时屏蔽SIGPROF信号。（0001）
 - watchers  数组，根据观察者的fd值，存储对应的观察者（会比nfds大）
 - nwatchers   watchers数组的长度，在maybe_resize函数扩容（会比nfds大）
+- internal_fields 内部字段
+
+```c
+struct uv__loop_internal_fields_s {
+  unsigned int flags;   //用来标记metrics
+  uv__loop_metrics_t loop_metrics;
+};
+struct uv__loop_metrics_s {
+  uint64_t provider_entry_time;
+  uint64_t provider_idle_time;
+  uv_mutex_t lock;
+};
+```
+
+- async_handles  线程池相关的handle节点
+- async_io_watcher  线程池中唯一一个观察者
+- async_wfd   这个观察者对应的通讯管道中的写端 文件描述符
 
 # uv_run (函数)
 
@@ -44,11 +61,16 @@ unsigned int nelts;   //节点数
 
 修改time，待细究，不知道具体实现
 
+https://zhuanlan.zhihu.com/p/52161066  windows版本
+
 ## uv__run_timers （函数）
 
-看一个时间handle如何放到loop的handle_queue，如何被放到heap中。
+1. 在loop中找到对应的堆指针。
+2. 通过堆指针找到堆顶（堆节点）。
+3. 通过container_of 函数，堆节点基于0的地址偏移量来找到对应的时间handle（uv_timer_t）
 
-如何处理 （已看）
+4. 从堆节点从堆中去掉，将handle取消活跃，取消引用状态，loop中的引用计数减1
+5. 
 
 ## uv_run_pending （函数）
 
@@ -97,7 +119,7 @@ unsigned int nelts;   //节点数
 - 通过 epoll_pwait 等待完成的事件
 - 遍历结果，将完成的event的fd取出并在loop的watchers找到对应的观察者对象，进而执行这个观察者的回调函数
 
-![image-20210914164042031](E:\dailynote\node和js\libuv 源码\image\image-20210914164042031.png)
+![image-20210914164042031](image\image-20210914164042031.png)
 
 ## uv__metrics_update_idle_time（函数）
 
