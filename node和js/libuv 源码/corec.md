@@ -6,14 +6,22 @@ include/uv.h 的 uv_loop_s  =>  include/unix.h 的  UV_LOOP_PRIVATE_FIELDS
   unsigned int active_handles; 活跃的handle数量
   ```
 
-- active_reqs {count} 活跃的请求数
+- ```c
+   union { void* unused[2];  unsigned int count; } active_reqs;  // 活跃的请求数
+  ```
 
-```c
-union { void* unused[2]; unsigned int count; } active_reqs;
-```
+- ```c
+  uv_handle_t* closing_handles //要关闭的handle指针
+  ```
 
-- uv_handle_t* closing_handles 要关闭的handle指针
-- time  当前时间
+- ```c
+  uint64_t time;   //当前时间
+  ```
+
+- ```c
+  uint64_t timer_counter;  //管理定时器节点的id，不断叠加
+  ```
+
 - timer_heap  timer阶段所需要的数据结构
 
 ```c
@@ -23,23 +31,41 @@ unsigned int nelts;   //节点数
 } timer_heap;
 ```
 
-- void* handle_queue[2]  一个指针数组，0执行下一个，1指向上一个，在所有handle的最后一个
+- ```c
+  void* handle_queue[2]; // 一个指针数组，0执行下一个，1指向上一个
+  ```
 
 - ```c
   void* pending_queue[2];  //pending阶段的队列，一个根节点，而不是头节点 
   ```
 
-- watcher_queue 观察者队列节点
+- ```c
+  unsigned int stop_flag;  //事件循环是否结束的标记
+  ```
 
-- nfds    一般为watcher_queue队列节点数
+- ```c
+  int backend_fd   // epoll的fd
+  ```
 
-- backend_fd    epoll的fd
+- ```c
+  unsigned long flags;（0001）//Libuv运行的一些标记，目前只有UV_LOOP_BLOCK_SIGPROF，主要是用于epoll_wait的时候屏蔽SIGPROF信号，提高性能，SIGPROF是调操作系统settimer函数设置从而触发的信号
+  ```
+  
+- ```c
+  void* watcher_queue[2];  //观察者队列节点
+  ```
+  
+- ```c
+  uv__io_t** watchers  //数组，以观察者的fd值为索引，存储对应的观察者（watchers的长度会比nfds大）
+  ```
 
-- flags   标记，目前只有UV_LOOP_BLOCK_SIGPROF ,用于epoll_wait时屏蔽SIGPROF信号。（0001）
+- ```c
+  unsigned int nfds;   //watchers里fd个数，一般为watcher_queue队列的节点数
+  ```
 
-- watchers  数组，根据观察者的fd值，存储对应的观察者（会比nfds大）
-
-- nwatchers   watchers数组的长度，在maybe_resize函数扩容（会比nfds大）
+- ```c
+   unsigned int nwatchers;  //watchers数组的长度，在maybe_resize函数扩容（会比nfds大）
+  ```
 
 - internal_fields 内部字段
 
@@ -56,8 +82,21 @@ struct uv__loop_metrics_s {
 ```
 
 - async_handles  线程池相关的handle节点
+
 - async_io_watcher  线程池中唯一一个观察者
+
 - async_wfd   这个观察者对应的通讯管道中的写端 文件描述符
+
+- ```c
+   //事件循环的prepare阶段对应的任务队列                   
+  void* prepare_handles[2];        
+              
+   //事件循环的check阶段对应的任务队列              
+  void* check_handles[2];        
+  
+   //事件循环的idle阶段对应的任务队列
+  void* idle_handles[2];  
+  ```
 
 # uv_run (函数)
 
@@ -88,18 +127,19 @@ https://zhuanlan.zhihu.com/p/52161066  windows版本
 
 ## uv_run_pending （函数）
 
+官网对pending阶段的解释是在上一轮的Poll IO阶段没有执行的IO回调，会在下一轮循环的pending阶段被执行。从源码来看，Poll IO阶段处理任务时，在某些情况下，如果当前执行的操作失败需要执行回调通知调用方一些信息，该回调函数不会立刻执行，而是在下一轮事件循环的pending阶段执行（比如写入数据成功，或者TCP连接失败时回调C++层）
+
 1. 判断是否为空
 2. 将pending_queue除了根节点外的其余节点，放到一个新的根节点下。
 3. 然后遍历新的根节点。
-4. 
 
 ## uv__run_idle（函数）
 
-略
+prepare,check,idle是Libuv事件循环中属于比较简单的一个阶段，它们的实现是一样的（见loop-watcher.c）。
 
 ## uv__run_prepare（函数）
 
-略
+prepare,check,idle是Libuv事件循环中属于比较简单的一个阶段，它们的实现是一样的（见loop-watcher.c）。
 
 ## uv_backend_timeout （函数）
 
@@ -155,6 +195,10 @@ timeout = 0 导致epoll_wait（）立即返回，即使没有可用事件。
 ## uv__metrics_update_idle_time（函数）
 
 略
+
+# uv__run_check （函数）
+
+prepare,check,idle是Libuv事件循环中属于比较简单的一个阶段，它们的实现是一样的（见loop-watcher.c）。
 
 ## uv__run_closing_handles（函数）
 
