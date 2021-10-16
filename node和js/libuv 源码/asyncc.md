@@ -128,6 +128,8 @@ uv_async_send首先拿到写端对应的fd，然后调用write函数，此时，
 
 执行回调
 
+读取数据、遍历async_handles，取出，对pending状态为1，且存在回调的，执行回调。同时会把pending改回0，再放回async_handles
+
 ```c
 static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   char buf[1024];
@@ -175,4 +177,4 @@ static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
 }
 ```
 
-待继续：https://github.com/theanarkh/understand-nodejs/blob/master/docs/chapter04-%E7%BA%BF%E7%A8%8B%E6%B1%A0.md
+待继续：https://github.com/theanarkh/understand-nodejs/blob/master/docs/chapter04-%E7%BA%BF%E7%A8%8B%E6%B1%A0.md  线程池的实现
