@@ -96,3 +96,41 @@ IO 观察者封装了文件描述符、事件和回调，然后插入到 loop �
 
 ```
 
+# maybe_resize
+
+```c
+static void maybe_resize(uv_loop_t* loop, unsigned int len) {
+  uv__io_t** watchers;
+  void* fake_watcher_list;
+  void* fake_watcher_count;
+  unsigned int nwatchers;
+  unsigned int i;
+
+  if (len <= loop->nwatchers)
+    return;
+
+  /* Preserve fake watcher list and count at the end of the watchers */
+  if (loop->watchers != NULL) {
+    fake_watcher_list = loop->watchers[loop->nwatchers];
+    fake_watcher_count = loop->watchers[loop->nwatchers + 1];
+  } else {
+    fake_watcher_list = NULL;
+    fake_watcher_count = NULL;
+  }
+
+  nwatchers = next_power_of_two(len + 2) - 2;
+  watchers = uv__reallocf(loop->watchers,
+                          (nwatchers + 2) * sizeof(loop->watchers[0]));
+
+  if (watchers == NULL)
+    abort();
+  for (i = loop->nwatchers; i < nwatchers; i++)
+    watchers[i] = NULL;
+  watchers[nwatchers] = fake_watcher_list;
+  watchers[nwatchers + 1] = fake_watcher_count;
+
+  loop->watchers = watchers;
+  loop->nwatchers = nwatchers;
+}
+```
+

@@ -83,7 +83,10 @@ struct uv__loop_metrics_s {
 
 - async_handles  线程池相关的handle节点
 
-- async_io_watcher  线程池中唯一一个观察者
+- ```c
+   // 用于监听是否有async handle任务需要处理
+   uv__io_t async_io_watcher;  
+   ```
 
 - async_wfd   这个观察者对应的通讯管道中的写端 文件描述符
 
@@ -109,6 +112,8 @@ struct uv__loop_metrics_s {
 ## uv_loop_alive（函数）
 
 有活跃的handle、有活跃的request、有需要关闭的handles， 则表示事件循环活跃
+
+因此通过这三种情况来控制事件循环是否继续。
 
 ## uv__update_time（函数）
 
@@ -171,6 +176,18 @@ timeout其他为0 的情况（要么是事件循环要关闭，要么是有handl
 
 ## uv__io_poll （函数）
 
+第一阶段：
+
+- 遍历loop中的`watcher_queue`，通过epoll_ctl注册到epoll中。
+
+第二阶段：
+
+- 使用epoll_wait 等待事件，并处理事件。
+
+
+
+
+
 - timeout
 
 timeout= -1 导致epoll_wait（）无限期阻塞
@@ -204,23 +221,7 @@ prepare,check,idle是Libuv事件循环中属于比较简单的一个阶段，它
 
 将所有的closing_handles全部执行完，根据不同类型进行不同处理。
 
-# uv__io
-
-结构，看unix.h
-
-## uv__io_init （函数）
-
-总结：初始化这个uv__io_t结构体
-
-初始化pending_queue节点、watcher_queue节点
-
-赋值cb（回调函数）和fd（文件描述符） 
-
-## uv_io_start （函数）
-
-https://blog.csdn.net/zouwm12/article/details/101386446
-
-总结：将这个uv__io_t结构体和loop关联上
+我们在close回调里又往close队列新增了一个节点，而该节点不会在本轮的close阶段被执行，这样会导致执行完close阶段，但是close队列依然有节点，如果直接退出，则无法执行对应的回调。 我们看到有三种情况，Libuv认为事件循环是存活的。如果我们控制这三种条件就可以控制事件循环的的退出。
 
 
 
