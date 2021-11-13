@@ -1,5 +1,7 @@
 # docker
 
+（从使用的角度去区分，安装、便捷、快速）
+
 它是轻量级，更加细粒话，可以直接运行在宿主硬件上，进程级别。
 
 https://www.zhihu.com/question/48174633
@@ -18,6 +20,8 @@ https://www.zhihu.com/question/48174633
 
 https://docs.docker.com/engine/install/centos/
 
+https://docs.docker.com/installation/windows （麻烦不推荐，docker桌面来着）
+
 # 底层技术支持
 
 namespces：做隔离，存在以下类型的命名空间：pid,net,ipc,mnt,uts
@@ -29,19 +33,40 @@ Union file systems：Container和image的分层
 # Docker Image 
 
 1. 文件和meta data的集合
-
 2. 分层的，每一层都可以添加改变删除文件，成为一个新的image
-
 3. 不同的image可以共享相同的layer
-
 4. image本身也是read-only的创建一个base image
+
+## 创建镜像
+
+### 1 commit
+
+```shell
+docker run -ti <imagename>  # 用镜像运行容器
+
+echo test # 在容器里面生成test文件
+
+exist  # 退出容器
+
+docker commit  -a "作责信息" -m "提交信息" -p(提交时暂停容器运行) <containerId> <image>:<tag>
+
+docker image ls -a # 查看是否生成镜像 
+```
+
+### 2 基于本地模板导入
+
+![image-20211113145942043](D:\note\docker\img\image-20211113145942043.png) 
+
+### 3 基于dockerfile
 
 创建一个image（2中方式，通过bulid dockerfile ，通过pull）
 
 1. 有可执行文件
 2. 编写Dockerfile
 3. docker build -t xx .  //xx表示给这个image命名
-4. docker image ls
+4. docker image ls -a
+
+## 指令
 
 ```js
 docker image ls  //image列表
@@ -52,31 +77,86 @@ docker history id  //查看这个image的各层
 
 docker image bulid -t xx .  //会在当前目录查找一个Dockerfile文件，然后构建镜像，名字是xx
 
-docker rmi xx //删除某个image
+docker rmi xx //删除某个image，如果有多个标签指向同一个镜像源，则只是删除标签，只剩一个标签时，则会删除镜像源
+
+docker run -t -i <imagename>   [指令]   //运行某个镜像
+ 
+docker tag hello-world:latest test:latest   // 新建一个镜像test，与hello-world执向同一个镜像源
+
+docker inspect  <imagename>  //查看某个镜像的具体信息
+    
+docker serach <imagename>  //搜索可用的镜像
 ```
 
-​		构建是由docker守护进程执行的。docker客户端和守护进程不要求在同一台机器上。比如在window上建立的虚拟机，在虚拟机上构建。那么客户端是在宿主机器上，守护进程在虚拟机上。客户端先将文件上传到虚拟机的守护进程，然后再构建。因此如果文件过大，会花费更多时间。
+## 存入存出
+
+略
+
+## 其他	
+
+​	构建是由docker守护进程执行的。docker客户端和守护进程不要求在同一台机器上。比如在window上建立的虚拟机，在虚拟机上构建。那么客户端是在宿主机器上，守护进程在虚拟机上。客户端先将文件上传到虚拟机的守护进程，然后再构建。因此如果文件过大，会花费更多时间。
 
 ​		镜像不是一个很大的二进制块，而是分层的。因此基础镜像只会被存储一次。可以被公用。docker只会去下载未被存储的分层。
 
 ​		构建时，Dockerfile的每一行，都会是一层。构建过程：
 
-![image-20201011105959085](img\image-20201011105959085.png)
+![
+
+](img\image-20201011105959085.png)
 
 # Docker Container
 
-通过image创建
+## docker run
 
-在image layer之上建立一个container layer
+docker run 等于docker create  + docker start
 
-类比面向对象：类和实例
+![image-20211113153046836](D:\note\docker\img\image-20211113153046836.png)
+
+docker run -it  \<imageName>  进入容器后，exit退出，容器就终止了。因为没有继续运行的必要。
+
+## 守护态运行
+
+`docker run -d ubuntu /bin/sh -c "while true;do  echo hello world;sleep 1;done"`
+
+-d 以守护态运行镜像ubuntu  ，在启动的容器内 以sh 执行命令 "xxx"
+
+`docker logs` 查看运行的容器输出内容
+
+## 容器启动终止
+
+`docker stop xxx -t <秒>`   默认10s
+
+会先向容器发送sigterm信号，过10s 再发送sigkill信号终止容器。
+
+`docker start <contain>` 将终止的容器再次启动
+
+`docker restart <contain>`
+
+## 进入守护态的容器信息
+
+1. `docker attach <containerName>`
+
+attach ，多个窗口同时attach一个容器时，所有窗口同步显示，且某个窗口因为命令阻塞，其他窗口也无法显示。
+
+2. `docker exec -ti <container> /bin/bash`
+3. nsenter 工具 （略）
+
+## 删除容器
+
+![image-20211113164356981](D:\note\docker\img\image-20211113164356981.png)
+
+## 导入导出
+
+略
+
+## 指令
 
 ```js
-docker container ls -a //列举所有容器，包括当前和已经结束的
+docker ps -a 等同 docker container ls -a //列举所有容器，包括当前和已经结束的，已结束也会对镜像存在引用
 
 docker run -d --name=xx <image> //通过image后台运行一个container，并指定名字
 
-docker run -it <image>  //交互式运行，好像要加/bin/bash
+docker run -it <image>  //t表示docker分配伪终端绑定到容器的标准输入上，i表示保持标准输入开启，其结果为在当前系统上就能操作容器的系统
 
 docker container commit //create a new image
 
@@ -85,15 +165,23 @@ docker rm $(docker ps -qa) //删除所有不在运行地容器
 docker run -d  --name web-container -p 8082:8080 web //<image> 必须放在最后
 ```
 
-# Docker 的Command
+# Docker Hub
 
-查看命令
+仓库（略）
 
-docker --helper
+# 数据卷
 
-docker container
+在容器与主机，容器与容器之间共享数据。
 
-docker image
+![image-20211113165625611](D:\note\docker\img\image-20211113165625611.png)
+
+测试挂在卷：
+
+在主机/home/test 新建一个test.js 文件。 /home/test 会被挂载到容器的/opt/webapp ，然后启动有node的容器，执行 node /opt/webapp/test.js  ，通过 docker logs xx ，如果有执行test.js打印出来的内容，则挂载没问题
+
+`docker run -d -P --name web -v /home/test:/opt/webapp node node /opt/webapp/test.js`
+
+
 
 # 创建一个Docker image（两种方法）
 
