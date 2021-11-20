@@ -175,11 +175,44 @@ docker run -d  --name web-container -p 8082:8080 web //<image> 必须放在最�
 
 ![image-20211113165625611](D:\note\docker\img\image-20211113165625611.png)
 
-测试挂在卷：
+## 三种数据卷
+
+- volume，普通卷，映射在主机的/var/lib/docker/volumes
+- bind，绑定卷，映射主机指定目录下
+- tmpfs，临时卷，只存在内存中
+
+## 示例
+
+![image-20211120155245041](img\image-20211120155245041.png)
 
 在主机/home/test 新建一个test.js 文件。 /home/test 会被挂载到容器的/opt/webapp ，然后启动有node的容器，执行 node /opt/webapp/test.js  ，通过 docker logs xx ，如果有执行test.js打印出来的内容，则挂载没问题
 
 `docker run -d -P --name web -v /home/test:/opt/webapp node node /opt/webapp/test.js`
+
+挂载卷的容器目录会自动创建，默认权限是rw.
+
+## 普通卷
+
+```js
+//创建数据卷，在/var/lib/docker/volumes
+docker volume create -d local test
+```
+
+## 数据卷容器
+
+用作数据备份，数据恢复
+
+创建容器dbdata  ，有一个数据卷/dbdata
+
+```js
+docker run -it -v /dbdata --name dbdata ubuntu
+```
+
+其他容器挂载这个dbdata的数据卷/dbdata
+
+```js
+docker run -it --volumes-from dbdata --name db1 ubuntu
+```
 
 
 
