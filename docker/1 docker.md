@@ -214,7 +214,34 @@ docker run -it -v /dbdata --name dbdata ubuntu
 docker run -it --volumes-from dbdata --name db1 ubuntu
 ```
 
+# 端口映射与容器互联
 
+使用 -P 或 -p
+
+-P ，docker会随机映射一个49000~49900的宿主端口到内部容器开放的网络端口。docker ps查看
+
+-p，可以指定端口. `-p 5000:80` 将宿主机器的5000端口映射到容器的80端口，多次使用可以绑定多个端口
+
+- 映射指定地址指定端口 `-p 127.0.0.1:5000:5000`
+- 映射指定地址任意端口`-p 127.0.0.1::5000`
+- 指定udp端口`-p 5000:5000/udp`
+- 查看端口配置：`docker port nostalgic_morse  <port>`
+
+
+
+容器有自己的内部网络和ip地址，可通过docker container inspect  \<containerId>
+
+容器名是唯一的，如果重复，则需要docker rm删除之前的.
+
+## 容器互联
+
+互联是通过更新容器环境变量，host文件 来实现两个容器之间建立虚拟通道，而不用映射端口到宿主机器上。
+
+`docker run -d -P --name web --link db:db training/webapp python app;py`
+
+`--link name:alias`   name是要链接的容器名称，alias是别名
+
+将web容器与db容器互联，web容器可以内部直接访问db容器。具体：P66
 
 # 创建一个Docker image（两种方法）
 
