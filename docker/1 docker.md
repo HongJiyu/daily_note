@@ -42,7 +42,7 @@ Union file systems：Container和image的分层
 ### 1 commit
 
 ```shell
-docker run -ti <imagename>  # 用镜像运行容器
+docker run -it <imagename>  # 用镜像运行容器
 
 echo test # 在容器里面生成test文件
 
@@ -216,6 +216,8 @@ docker run -it --volumes-from dbdata --name db1 ubuntu
 
 # 端口映射与容器互联
 
+## 端口映射
+
 使用 -P 或 -p
 
 -P ，docker会随机映射一个49000~49900的宿主端口到内部容器开放的网络端口。docker ps查看
@@ -243,7 +245,7 @@ docker run -it --volumes-from dbdata --name db1 ubuntu
 
 将web容器与db容器互联，web容器可以内部直接访问db容器。具体：P66
 
-# 创建一个Docker image（两种方法）
+# 创建一个Docker image（3种方法）
 
 在centos的image下，生成一个带有vim功能的centos
 
@@ -310,7 +312,9 @@ ADD hello.tar.gz /root //拷贝hello到root目录下，并且会解压
 COPY hello /root //拷贝hello到root目录下
 ```
 
-COPY由于ADD，因为ADD还有额外的解压功能。
+COPY优于ADD，因为ADD还有额外的解压功能。
+
+都是基于dockerfile所在目录（源路径为宿主机器）
 
 获取远程文件则只能使用RUN curl xx或者RUN wget xxx。
 
@@ -350,13 +354,11 @@ The *exec* form is parsed as a JSON array, which means that you must use double-
 
 如果docker run制定了其他命令，CMD命令被忽略。docker run -it image /bin/bash ,这样，那这个image如果有CMD，也不会被执行。
 
-
+![image-20211128111635412](D:\note\docker\img\image-20211128111635412.png)
 
 entrypoint:
 
 和cmd一样，是执行shell和exec命令的。
-
-
 
 两者结合，entrypoint执行命令，而cmd 提供默认值，或者在命令行提供（docker run -it < image > --vm 1 --xx x --xx x）如下：
 
@@ -368,6 +370,14 @@ CMD ["-h"]
 容器启动执行 nginx -h 如果docker run 指定参数，那么nginx -xx
 
 ### shell格式和exec格式
+
+shell 和exce的区别
+
+https://www.jianshu.com/p/dd7956aec097
+
+- shell 命令会创建子进程操作，操作完返回当前进程，上下文不会被子进程的操作内容所影响
+- source或. /xx.sh ，在当前上下文执行，不会产生新的进程，当前上下文会受执行内容影响。
+- exec，一个新的command进程，替换当前shell进程，但是pid不变，执行完直接退出，不会回到之前的shell
 
 shell格式
 
