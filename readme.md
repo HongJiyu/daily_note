@@ -24,6 +24,10 @@ https://www.bilibili.com/video/av925833332/
 
 再计网
 
+
+
+mysql监控  、主从恢复，节点切换
+
 # 其他
 
 nodejs流：https://juejin.cn/post/6844903543678189576 （以及涉及的书）
