@@ -5,3 +5,5 @@ k8s in action
 
 
 docker 技术入门与实战
+
+看完 10 章
