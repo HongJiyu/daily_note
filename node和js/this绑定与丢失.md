@@ -49,7 +49,7 @@ function thisTo(){
 var data={
     a:2
 }; 
-thisTo.call(data));  //2
+thisTo.call(data);  //2
 ```
 
 ## 3.隐式绑定
