@@ -26,7 +26,7 @@ fn.apply(obj,[xx,xx,xx])
 fn1=fn.bind(obj); fn1(xx,xx,xx);
 ```
 
-### 内存控制（垃圾回收）
+### 垃圾回收
 
 ```js
 process.memoryUsage()
@@ -37,11 +37,9 @@ max-new-space-size
 
 新生代和老年代 、 新生代用复制、老年代用标记清除或标记整理。
 
-
+- gcroot（todo）
 
 ## 深入
-
-事件循环、异步非阻塞io、异步编程、require机制、npm i 原理、内存泄漏（原因及排查）
 
 ### 事件循环
 
@@ -49,14 +47,14 @@ libuv源码 +  uv_loop_s
 
 ### 异步io
 
-
+- 阻塞非阻塞
+- 同步异步
 
 ### 异步编程
 
 1. 回调
 2. 事件监听
 3. 生成消费
-4. promise
 
 ### require机制
 
@@ -136,17 +134,124 @@ y文件里面引用x文件（找node_modules）
 
 ### npm i 原理
 
-package.json 和package-lock.json
+package.json 和package-lock.json和node_modules
 
 https://www.cnblogs.com/goloving/p/14602743.html
 
 ### 内存监控
 
+- heapdump
 
+https://www.cnblogs.com/xieqianli/p/12619886.html
+
+
+
+分析可以看这个：
+
+https://www.bookstack.cn/read/node-in-debugging/2.2heapdump.md
+
+https://www.cnblogs.com/xieqianli/p/12619886.html
+
+
+
+- node-memwatch:安装失败。。。垃圾回收触发stat事件，连续5次垃圾回收但是内存都是上升则触发leak事件。
+
+
+
+以上两个结合：做到leak事件后触发生成dump文件。
+
+### 多进程
 
 # koa
 
 洋葱-》中间件加载机制
+
+dispatch 函数类似于流程控制，让一个数组函数递归地执行，而数组里函数的参数必须接收这个dispatch函数。
+
+```js
+'use strict'
+
+/**
+ * Expose compositor.
+ */
+
+module.exports = compose
+
+/**
+ * Compose `middleware` returning
+ * a fully valid middleware comprised
+ * of all those which are passed.
+ *
+ * @param {Array} middleware
+ * @return {Function}
+ * @api public
+ */
+
+function compose (middleware) {
+  if (!Array.isArray(middleware)) throw new TypeError('Middleware stack must be an array!')
+  for (const fn of middleware) {
+    if (typeof fn !== 'function') throw new TypeError('Middleware must be composed of functions!')
+  }
+
+  /**
+   * @param {Object} context
+   * @return {Promise}
+   * @api public
+   */
+
+  return function (context, next) {
+    // last called middleware #
+    let index = -1
+    return dispatch(0)
+    function dispatch (i) {
+      if (i <= index) return Promise.reject(new Error('next() called multiple times'))
+      index = i
+      let fn = middleware[i]
+      if (i === middleware.length) fn = next
+      if (!fn) return Promise.resolve()
+      try {
+        return Promise.resolve(fn(context, dispatch.bind(null, i + 1)))
+      } catch (err) {
+        return Promise.reject(err)
+      }
+    }
+  }
+}
+```
+
+仿制
+
+```js
+const fn1 = function(next){
+    console.log(1);
+    next();
+}
+const fn2 = function(next){
+    console.log(2);
+    next();
+}
+const fn3 = function(next){
+    console.log(3);
+    next();
+}
+const arr = [fn1,fn2,fn3]; 
+
+const dispatch = function(i){
+    if(i>arr.length-1){
+        console.log('end');
+        return;
+    }
+    const fn = arr[i];
+    if(fn){
+        fn(dispatch.bind(null,i+1));
+    }else{
+        throw new Error("error");
+    }
+}
+dispatch(0)
+```
+
+
 
 # egg
 
