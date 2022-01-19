@@ -54,7 +54,7 @@ libuv源码 +  uv_loop_s
 
 1. 回调
 2. 事件监听
-3. 生成消费
+3. 发布订阅
 
 ### require机制
 
@@ -144,17 +144,23 @@ https://www.cnblogs.com/goloving/p/14602743.html
 
 https://www.cnblogs.com/xieqianli/p/12619886.html
 
-
-
-分析可以看这个：
-
 https://www.bookstack.cn/read/node-in-debugging/2.2heapdump.md
 
-https://www.cnblogs.com/xieqianli/p/12619886.html
+summary视图（构造函数）：
+
+1. Contructor：构造函数名，例如 Object、Module、Socket，(array)、(string)、(regexp) 等加了括号的分别代表内置的 Array、String 和 Regexp。
+2. Distance：到 GC roots （GC 根对象）的距离。GC 根对象在浏览器中一般是 window 对象，在 Node.js 中是 global 对象。距离越大，则说明引用越深，有必要重点关注一下，极有可能是内存泄漏的对象。
+3. Objects Count：对象个数。
+4. Shallow Size：对象自身的大小，不包括它引用的对象。
+5. Retained Size：对象自身的大小和它引用的对象的大小，即该对象被 GC 之后所能回收的内存大小。
+
+Comparison 视图（两个快照的对比）：
+
+new ，deleted ，delta ，alloc size，freed size ， size data
 
 
 
-- node-memwatch:安装失败。。。垃圾回收触发stat事件，连续5次垃圾回收但是内存都是上升则触发leak事件。
+- node-memwatch（被遗弃）:安装失败。。。垃圾回收触发stat事件，连续5次垃圾回收但是内存都是上升则触发leak事件。
 
 
 
@@ -162,9 +168,13 @@ https://www.cnblogs.com/xieqianli/p/12619886.html
 
 ### 多进程
 
+https://www.cnblogs.com/chyingp/p/node-learning-guide-child_process.html
+
+https://blog.csdn.net/hongchh/article/details/79898816
+
 # koa
 
-洋葱-》中间件加载机制
+## 洋葱
 
 dispatch 函数类似于流程控制，让一个数组函数递归地执行，而数组里函数的参数必须接收这个dispatch函数。
 
@@ -255,5 +265,17 @@ dispatch(0)
 
 # egg
 
-各类组件加载机制、socketIO及解决方案、node多进程（master、worker、agent）
+## 组件加载
+
+## 项目启动
+
+## 性能监控
+
+egg-xtransit
+
+alinode
+
+## sticky
+
+## 多进程
 
