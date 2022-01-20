@@ -43,7 +43,9 @@ max-new-space-size
 
 ### 事件循环
 
-libuv源码 +  uv_loop_s 
+结合看：libuv 源码（笔记） + understand nodejs
+
+重点：iopoll和线程池。
 
 ### 异步io
 
@@ -267,15 +269,15 @@ dispatch(0)
 
 ## 组件加载
 
-## 项目启动
+## 项目启动源码
+
+egg-bin
 
 ## 性能监控
 
 egg-xtransit
 
 alinode
-
-## sticky
 
 ## 多进程
 
