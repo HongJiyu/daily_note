@@ -45,8 +45,6 @@ max-new-space-size
 
 结合看：libuv 源码（笔记） + understand nodejs
 
-重点：iopoll和线程池。
-
 ### 异步io
 
 - 阻塞非阻塞
@@ -269,6 +267,8 @@ dispatch(0)
 
 ## 组件加载
 
+egg-core
+
 ## 项目启动源码
 
 egg-bin
@@ -278,6 +278,3 @@ egg-bin
 egg-xtransit
 
 alinode
-
-## 多进程
-
