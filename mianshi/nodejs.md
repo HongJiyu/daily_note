@@ -267,7 +267,7 @@ dispatch(0)
 
 ## 组件加载
 
-egg-core
+ 具体看 node和js =》egg源码 => egg-core，针对性看plugin + service 即可。
 
 ## 项目启动源码
 

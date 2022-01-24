@@ -26,8 +26,20 @@ utils 提供整个文件需要用到的工具类。
 ## plugin
 
    `egg-core/lib/loader/mixin/plugin.js`
-   从loadPlugin()入手，整体流程为：
-   1.读取应用和所有框架的插件配置文件，并为每个插件对象初始化属性。因为插件可以简略配置如：`redis：true` 变为：
+
+### 整体：
+
+123点：找到plugin的配置文件并加载到一个对象中。
+
+4：找到所有插件的具体包。
+
+5：合并插件配置和具体包的pkg的配置
+
+6：根据配置的所有插件，找出某个插件依赖但是缺失的，找出循环依赖的。报错，而enable为false，则告警并设置为true。
+
+### 详细：
+
+   1.`readPluginConfigs`读取应用和使用的所有框架的路径（应用下的nodemodules的框架），`resolveModule`找到对应的plugin文件的绝对路径，`loadFile`加载文件，`normalizePluginConfig`为每个插件对象初始化属性。因为插件可以简略配置如：`redis：true` 变为一下例子，`_extendPlugins`处理重复插件的加载。
 
    ```
    plugins[name] = {
@@ -40,17 +52,75 @@ utils 提供整个文件需要用到的工具类。
       }
    ```
 
-   同时从`EGG_PLUGINS`环境变量获取用户自定义插件。
+2. 同时从`EGG_PLUGINS`环境变量获取用户自定义插件。
+3. `三个_extendPlugins`合并所有插件配置（用户自定义、当前应用的、框架配置的），用户自定义的优先级最高，其次是当前应用，然后才是框架。
+4. `getPluginPath`针对每个插件配置，都到应用的node_modules、所有框架的node_modules中找这个插件。然后获取到插件的具体路径（只要有一个找不到就报错，且就是enable是false，也要找）
+5. `mergePluginConfig`根据plugin.js的插件配置，及具体的插件的package.json中的`eggPlugin`的配置，合并两者的配置。
+6. `getOrderPlugins`这是个重要函数，里面调用`sequence`递归，
 
-   2.合并所有插件配置，即用户自定义配置覆盖应用插件，应用插件覆盖框架插件。
+```js
+function(tasks, names) {
+  const results = {
+    sequence: [], //遍历的所有插件
+    requires: {}, //需要用到的插件，包含依赖的。
+  }; 
+  const missing = []; // 需要但是缺失的
+  const recursive = []; // 循环依赖的
 
-   3.为每个插件对象赋予对应在`node_modules`所处路径（path属性）。先从应用路径的`node_modules`=》框架的`node_modules`再到命令执行路径下的`node_modules`下找。
+  sequence(tasks, names, results, missing, recursive, [], false, 'app');
 
-   4.在上面的path中找到对应插件的`package.json`，并将`'dependencies', 'optionalDependencies', 'env'`覆盖（没有才覆盖）插件对象的属性。
+  if (missing.length || recursive.length) {
+    results.sequence = []; // results are incomplete at best, completely wrong at worst, remove them to avoid confusion
+  }
 
-   5.根据当前的`EGG_SERVER_ENV`和插件的env，来禁用某些插件。
+  return {
+    sequence: results.sequence.filter(item => results.requires[item]),
+    missingTasks: missing,
+    recursiveDependencies: recursive,
+  };
+}
 
-   6.在getOrderPlugins调用utils中sequencify方法（**递归，很精髓**）：检查插件的依赖关系、插件的依赖包是否完整，如果存在循环依赖、依赖包不完整则报错。对被依赖的插件，但是被禁用的，重新设置为enable。并返回最终的所有插件配置。
+function sequence(tasks, names, results, missing, recursive, nest, optional, parent) {
+  names.forEach(function(name) {
+    if (results.requires[name]) return;
+
+    const node = tasks[name];
+
+    if (!node) {
+      if (optional === true) return;
+      missing.push(name);
+    } else if (nest.includes(name)) {
+      nest.push(name);
+      recursive.push(nest.slice(0));
+      nest.pop(name);
+    } else if (node.dependencies.length || node.optionalDependencies.length) {
+      nest.push(name);
+      if (node.dependencies.length) {
+        sequence(tasks, node.dependencies, results, missing, recursive, nest, optional, name);
+      }
+      if (node.optionalDependencies.length) {
+        sequence(tasks, node.optionalDependencies, results, missing, recursive, nest, true, name);
+      }
+      nest.pop(name);
+    }
+    if (!optional) {
+      results.requires[name] = true;
+      debug('task: %s is enabled by %s', name, parent);
+    }
+    if (!results.sequence.includes(name)) {
+      results.sequence.push(name);
+    }
+  });
+}
+```
+
+sequence函数：第五点提到的两个配置合并，先遍历配置文件的所有plugin，再根据每个插件的属性：dependencies和optionalDependencies递归下去。然后找到循环依赖的，缺失的，存在其中一种，则报错。存在但enable被设置为false。enable为false则改为开启并warn告警。
+
+### 遇到的问题：
+
+框架设计者将某个插件依赖去掉了。而应用模板本的plugin.js有这个插件的配置，没同步去掉。而开发者是将这个插件设置为false，因为没用到。后面更新时，应用有这个插件配置，但是框架对这个插件的依赖去掉了，导致没有装这个包，因此报错了。
+
+因为plugin的加载机制是：写在plugin.js上的，都会去判断install了具体的实现包。找不到就报错。至于enable值是啥，是到后面才判断。而且eable其实没啥大关系，因为就是是false，如果被其他插件引用到，也会被强制改为true，不过会warn出来。
 
 ## config
 
