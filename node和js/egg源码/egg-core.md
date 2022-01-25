@@ -122,6 +122,57 @@ sequence函数：第五点提到的两个配置合并，先遍历配置文件的
 
 因为plugin的加载机制是：写在plugin.js上的，都会去判断install了具体的实现包。找不到就报错。至于enable值是啥，是到后面才判断。而且eable其实没啥大关系，因为就是是false，如果被其他插件引用到，也会被强制改为true，不过会warn出来。
 
+## Service(加载到ctx)
+
+### 整体：
+
+loadservice() =》loadtocontext() =》 contextloader构造函数 =》 fileloader 的load()
+
+看contextloader构造函数，先走fileloader的load和parse函数，再回来看contextloader的懒加载service的机制。
+
+fileloader 通过`parse`所有service目录下的js文件，放到items中，`load`函数将所有的items通过reduce函数放到target中。
+
+contextloader是FileLoader的子类，做到将fileloader解析出来的target，将target内的所有service采用懒加载的方式加载到ctx上。
+
+```js
+items 的结构 [{},{},{}]
+target 的结构 {
+    serviceFold:{
+        serviceFold1:service1(export的内容，如果时方法则是方法的返回值)
+        serviceFold2:service2(export的内容)
+    }
+}
+```
+
+### 详细：
+
+1. parse函数：根据应用、框架、插件的所有service目录，通过globby包去解析这些目录下的所有 `**/*.js`文件。获取每个文件信息：
+
+```js
+假如文件路径：service/foo/bar.js 
+properties = [ 'foo', 'bar' ]
+pathName = service.foo.bar
+exports = require文件的export
+ items.push({ fullpath, properties, exports });
+```
+
+2. load函数，将所有的items，通过reduce函数，都构造到target对象
+
+```js
+target 的结构 {
+    serviceFold:{
+        serviceFold1:service1(export的内容，如果时方法则是方法的返回值)
+        serviceFold2:service2(export的内容)
+    }
+}
+```
+
+3. 再看contextloader类的构造函数中的defineProperty，getInstance函数，ClassLoader。
+
+4. contextloader构造函数，一开始会将service定义在ctx上。然后如果使用ctx.service那么会调用它的service的属性描述符get方法，然后实例化为一个ClassLoder，并为其下的其他属性定义了get方法。调用ctx.service.test。则调用test的get属性描述符，如果test是一个文件夹，则继续实例化为ClassLoader并为旗下其他属性定义get方法。如果是一个类或者对象。则new或者直接返回。
+
+
+
 ## config
 
    `egg-core/lib/loader/mixin/config.js`
@@ -177,51 +228,6 @@ obj={
 
 6. 注意TestClass 如果是一个非基本类型，会给他赋予一个`obj[EXPORTS] = true;`，在ContextLoader会去判断是否是最后一层（文件），不然还是文件夹。
 
-## Service(加载到ctx)
-
-loadService方法：
-
-1. 初始化属性，然后调用loadToContext方法。
-
-loadToContext方法：
-
-1. 再次初始化属性，实例化ContextLoader，并调用load方法。
-
-## ContextLoader
-
-是FileLoader的子类，它用来联合Service和FileLoader这两个类，做到将所有service采用懒加载的方式加载到ctx上。
-
-注意：
-
-1. ContextLoader的target，在super(options)时，传递给了FileLoader，并且后续调用FileLoader的load方法`new ContextLoader(opt).load();`，将所有的service都赋予给了target。如下
-
-```js
-target={
-    serviceFold:{
-        serviceFold1:service1(export的内容，如果时方法则是方法的返回值)
-        serviceFold2:service2(export的内容)
-    }
-}
-```
-
-2. getInstance方法的`values[EXPORTS]`和FileLoder中对export的内容赋予的值是相对应的，用来判断是否是最后一层，如果是且为class，则new，若为object，则return。如果不是最后一层，而是中间文件夹，则new ClassLoader。
-
-3. 全程都是通过definedProperty，且有用map进行缓存。因此很轻量（只有ctx用到某一个service，才会去加载这条链路，否则不会）。
-
-```js
-    Object.defineProperty(this, property, {
-      get() {
-        let instance = this._cache.get(property);
-        if (!instance) {
-          instance = getInstance(values, this._ctx);
-          this._cache.set(property, instance);
-        }
-        return instance;
-      },
-    });
-```
-
-4. 一开始会将service定义在ctx上。然后如果使用ctx.service那么会调用它的service的属性描述符get方法，然后实例化为一个ClassLoder，并为其下的其他属性定义了get方法。调用ctx.service.test。则调用test的get属性描述符，如果test是一个文件夹，则继续实例化为ClassLoader并为旗下其他属性定义get方法。如果是一个类或者对象。则new或者直接返回。
 
 ## Middleware（加载到app）
 
