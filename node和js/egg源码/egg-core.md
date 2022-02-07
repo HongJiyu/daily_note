@@ -59,7 +59,7 @@ utils 提供整个文件需要用到的工具类。
 6. `getOrderPlugins`这是个重要函数，里面调用`sequence`递归，
 
 ```js
-function(tasks, names) {
+function(tasks, names) {  //tasks：所有plugin配置对象，names：enable的配置
   const results = {
     sequence: [], //遍历的所有插件
     requires: {}, //需要用到的插件，包含依赖的。

@@ -43,7 +43,16 @@ max-new-space-size
 
 ### 事件循环
 
-结合看：libuv 源码（笔记） + understand nodejs
+结合看：具体看 node和js =》libuv 源码（笔记） + understand nodejs
+
+红黑树和最小堆的
+
+```js
+require("bintrees")   // 红黑树
+require('js-algorithms')   // 其他数据结构
+```
+
+
 
 ### 异步io
 
@@ -124,6 +133,7 @@ Where $HOME is the user's home directory, and $PREFIX is the Node.js configured 
 
 ```txt
 y文件里面引用x文件（找node_modules）
+0. 如果是系统对象，则直接返回。如果是路径(./xx/ 或者 ../xx/)则直接找文件。
 1. 根据y的文件路径（/xx/xx/y.js），则文件路径是 /xx1/xx2/
 2. 逐层往上找，/xx2/xx1/node_modules, /xx2/node_modules，以及GLOBAL_FOLDERS
 3. 在以上目录找
@@ -260,8 +270,6 @@ const dispatch = function(i){
 }
 dispatch(0)
 ```
-
-
 
 # egg
 
