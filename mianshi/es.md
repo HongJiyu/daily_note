@@ -17,11 +17,17 @@
 
 实现：搜索内容分词，只要某个词存在，且不需要保证顺序。
 
-![image-20220209224405756](E:\dailynote\mianshi\images\image-20220209224405756.png)
+## 总结：
 
 https://blog.csdn.net/jingyoushui/article/details/100737169
 
-todo ： match 和match_phrase的区别
+![image-20220209224405756](E:\dailynote\mianshi\images\image-20220209224405756.png)
 
 
+
+- match和query_string的区别
+
+https://blog.csdn.net/feinifi/article/details/100512058
+
+query_string不需要指定查询字段，会在所有字段中搜索
 
