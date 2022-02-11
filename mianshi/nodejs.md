@@ -2,6 +2,21 @@
 
 ## 基础
 
+### var、let、const
+
+- var会变量提升，及声明会被提升，赋值不会提升，且可被反复声明。无块作用域，也就是无视块作用域的限制。只有函数作用域
+- let、const有块作用域，在同一作用域下只可声明一次，但可在子作用域下声明父作用域已声明的变量。不会出现变量提升。
+- for的() 和{} 是建立了一个父作用域和子作用域。
+- 暂时性死区：**凡是在声明之前就使用这些变量,就会报错,所以在代码块内,使用`let`命令声明变量之前,该变量都是不可用的**
+
+```js
+let sName = 'itclan';
+if (true) {
+  console.log(sName); // Uncaught ReferenceError:sName is not defined
+  let sName = 'itclan';
+}
+```
+
 ### 闭包
 
 定义：所有的函数都是一个闭包。不过闭包更多地体现在嵌套函数，即子函数能够访问父函数的局部变量。当父函数返回子函数或者是子函数被外部变量所引用，那么父函数的作用域不会被回收。（大量则导致内存泄漏）
@@ -26,6 +41,14 @@ fn.apply(obj,[xx,xx,xx])
 fn1=fn.bind(obj); fn1(xx,xx,xx);
 ```
 
+### 原型
+
+https://blog.csdn.net/cc18868876837/article/details/81211729
+
+### promise
+
+### 生成器和await async
+
 ### 垃圾回收
 
 ```js
@@ -37,7 +60,7 @@ max-new-space-size
 
 新生代和老年代 、 新生代用复制、老年代用标记清除或标记整理。
 
-- gcroot（todo）
+验证可达性：引用技术、gcroot（todo）
 
 ## 深入
 
