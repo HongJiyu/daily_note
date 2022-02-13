@@ -52,7 +52,10 @@ var data={
 thisTo.call(data);  //2
 ```
 
+koa-compose  就是采用bind绑定，将app绑定到中间件函数，才能通过const { config,ctx } = this;
+
 ## 3.隐式绑定
+
 隐式绑定是指通过为对象添加属性，该属性的值即为要调用的函数，进而使用该对象调用函数：
 
 ```js
@@ -94,9 +97,12 @@ obj = {
 let echo = new obj.fn();
 echo.name;//听风是风 而不是时间跳跃
 
-```
+// new的优先级大于隐式
+let echo = new obj.fn();
+console.log(obj.name);
+console.log(echo.name)
 
-​		
+```
 
 以上四点是this在绑定调用对象时的规则。前面的问题中，是符合隐式绑定的。但是存在绑定丢失的情况。具体如下：
 

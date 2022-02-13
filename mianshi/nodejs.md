@@ -23,13 +23,15 @@ if (true) {
 
 原理：同一个函数内部的闭包作用域只有一个，所有闭包共享。在执行函数的时候，如果遇到闭包，则会创建闭包作用域的内存空间，将该闭包所用到的局部变量添加进去，然后再遇到闭包，会在之前创建好的作用域空间添加此闭包会用到而前闭包没用到的变量。函数结束时，清除没有被闭包作用域引用的变量。
 
-好处：外部函数的变量驻扎内存中，同时可以避免变量污染全局。
+好处：外部函数的变量驻扎内存中，同时可以避免变量污染全局，限制访问。
 
-场景：暂无特殊使用场景。
+危害：内存泄漏。
+
+场景：局部变量实现自增。
 
 ### this绑定
 
-具体看this绑定与丢失（new绑定、显示绑定、隐式绑定、默认绑定）
+具体看node和js中this绑定与丢失（new绑定、显示绑定、隐式绑定、默认绑定）
 
 ### call、apply、bind
 
@@ -45,7 +47,34 @@ fn1=fn.bind(obj); fn1(xx,xx,xx);
 
 https://blog.csdn.net/cc18868876837/article/details/81211729
 
+- 构造函数和函数的区别。构造函数默认命名首字母大写。用this.xx来构造属性。
+- prototype属性每个函数都会有，是这个函数的原型，用于实例的公共函数。
+- `__proto__`，函数和对象都有，用于找到上一级的原型（对象则是找到其构造函数的原型）（原型则是找到上一级的原型），最终指向null
+- prototype 和__proto__ 一个是找本级的原型，一个是找上一级的原型
+- construct，函数和对象都有，找到构造函数。（一个构造函数的原型和实例对象，同样的原型和实例对象的构造函数是同一个）最终指向Function()
+- 创建一个对象，其原型指向tmp ：`const new1 = Object.create(tmp);  console.log(new1.__proto__===tmp);  `  
+- for in 会取找原型链
+
 ### promise
+
+`new promise((resolve,reject)=>{ }).then((data)=>{},(err)=>{})`
+
+注意点：
+
+https://www.cnblogs.com/zhujieblog/articles/13161364.html
+
+- .then 或者 .catch 的参数期望是函数，传入非函数则会发生值穿透。`（p.resolve(1).then(2).then((data)=>{console.log(data)})） 打印的是1`
+- 首先`Promise`构造函数会立即执行。
+- `promise`的状态一旦由等待`pending`变为成功`fulfilled`或者失败`rejected`。那么当前`promise`被标记为完成，后面则不会再次改变该状态。
+- `resolve`函数和`reject`函数都将当前`Promise`状态改为完成，并将异步结果，或者错误结果当做参数返回。
+- `then`方法和`catch`方法都能多次调用。要给下一个传参数，必须return，不管是return promsie还是return data。
+- then(()=>{//代码}).then() ，代码中，如果直接return data，则不需要等待下一个事件循环。如果是 return promise，则需要等下一个事件循环才会执行下一个then。
+
+编写时，存在同步代码和异步代码。 
+
+- 异步代码，在then中，要用promise包起来，resolve是决定下一个then的什么时候执行。如果还要返回值给下个then则需要resolve(data) 并return promise((resolve)=>{resolve(data)})
+- 同步代码，在then中，不需要promise包起来，也就不需要resolve（then代码执行完自动执行下个then），要返回值给下一个then，则直接return data
+- then 不需要写error函数，最后用catch捕获即可。
 
 ### 生成器和await async
 
