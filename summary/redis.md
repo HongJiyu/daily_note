@@ -1,1 +1,1 @@
-具体看redis章节
+具体看wps中的redis章节
