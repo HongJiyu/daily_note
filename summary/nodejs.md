@@ -4,7 +4,7 @@
 
 ### var、let、const
 
-- var会变量提升，及声明会被提升，赋值不会提升，且可被反复声明。无块作用域，也就是无视块作用域的限制。只有函数作用域
+- var会变量提升，即声明会被提升，赋值不会提升，且可被反复声明。无块作用域，也就是无视块作用域的限制。只有函数作用域
 - let、const有块作用域，在同一作用域下只可声明一次，但可在子作用域下声明父作用域已声明的变量。不会出现变量提升。
 - for的() 和{} 是建立了一个父作用域和子作用域。
 - 暂时性死区：**凡是在声明之前就使用这些变量,就会报错,所以在代码块内,使用`let`命令声明变量之前,该变量都是不可用的**
@@ -16,6 +16,8 @@ if (true) {
   let sName = 'itclan';
 }
 ```
+
+- 其他：`let low = high = 100` 是只声明了low，并没有声明high，因此high被放到了global中，正确应该是`let i = 1, high = 2`
 
 ### 闭包
 
@@ -55,6 +57,32 @@ https://blog.csdn.net/cc18868876837/article/details/81211729
 - 创建一个对象，其原型指向tmp ：`const new1 = Object.create(tmp);  console.log(new1.__proto__===tmp);  `  
 - for in 会取找原型链
 
+### 函数
+
+- 某个构造函数的原型上定义方法，所有基于该构造函数的实例对象都共享
+
+```js
+function Fun (){}
+fun.property.getName(){}
+```
+
+- 某个构造函数的属性，所有基于该构造函数的实例对象都会有一个该方法，而不是共享同一个。
+
+```js
+function Fun(){
+    this.getName = function (){}
+}
+```
+
+- 某个构造函数作为对象来看待，自己独有的方法
+
+```js
+function Fun(){}
+Fun.getName = function (){}
+```
+
+额外：声明方法也会提升，function fun(){} 会被提升，且声明和赋值同时实现。var fun = function (){} 注意是var定义变量会提升、会被拆为先声明后赋值。
+
 ### promise
 
 `new promise((resolve,reject)=>{ }).then((data)=>{},(err)=>{})`
@@ -66,15 +94,18 @@ https://www.cnblogs.com/zhujieblog/articles/13161364.html
 - .then 或者 .catch 的参数期望是函数，传入非函数则会发生值穿透。`（p.resolve(1).then(2).then((data)=>{console.log(data)})） 打印的是1`
 - 首先`Promise`构造函数会立即执行。
 - `promise`的状态一旦由等待`pending`变为成功`fulfilled`或者失败`rejected`。那么当前`promise`被标记为完成，后面则不会再次改变该状态。
-- `resolve`函数和`reject`函数都将当前`Promise`状态改为完成，并将异步结果，或者错误结果当做参数返回。
-- `then`方法和`catch`方法都能多次调用。要给下一个传参数，必须return，不管是return promsie还是return data。
-- then(()=>{//代码}).then() ，代码中，如果直接return data，则不需要等待下一个事件循环。如果是 return promise，则需要等下一个事件循环才会执行下一个then。
+- `resolve`函数和`reject`函数都将当前`Promise`状态改为完成，并将异步结果，或者错误结果当做参数返回`resolve(data)`。
+- `then`方法和`catch`方法都能多次调用。要给下一个传参数，必须return，不管是`return promsie`还是return data。
 
 编写时，存在同步代码和异步代码。 
 
 - 异步代码，在then中，要用promise包起来，resolve是决定下一个then的什么时候执行。如果还要返回值给下个then则需要resolve(data) 并return promise((resolve)=>{resolve(data)})
 - 同步代码，在then中，不需要promise包起来，也就不需要resolve（then代码执行完自动执行下个then），要返回值给下一个then，则直接return data
 - then 不需要写error函数，最后用catch捕获即可。
+
+执行顺序：（执行看着是这样，但是源码上没看出体现）
+
+- nextTick 和 then 被当作微任务，且nextTick 比 then先执行，不是某个阶段的所有宏任务执行完再执行微任务，而是某个宏任务执行完就会执行所有微任务。
 
 ### 生成器和await async
 
