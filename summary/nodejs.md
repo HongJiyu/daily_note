@@ -105,7 +105,60 @@ https://www.cnblogs.com/zhujieblog/articles/13161364.html
 
 执行顺序：（执行看着是这样，但是源码上没看出体现）
 
-- nextTick 和 then 被当作微任务，且nextTick 比 then先执行，不是某个阶段的所有宏任务执行完再执行微任务，而是某个宏任务执行完就会执行所有微任务。
+- nextTick 和 then 被当作微任务，且nextTick 比 then先执行，某个阶段的所有宏任务执行完再执行微任务（node 8），某个宏任务执行完就会执行所有微任务(node 12)。
+
+### stream
+
+流，用于数据传输，将数据像管道一样，一点一点地将数据传输。
+
+基础api：https://blog.csdn.net/github_38140984/article/details/83006103
+
+- 可读流：highWaterMark 表示每次读取多少个字节。每次读取完都会触发data事件。读取到的数据是buffer类型.
+- 可读流：pause()暂停、resume()继续读取。
+- 可写流： 通过write方法写入数据，在接收了 chunk 后，如果内部的缓冲小于创建流时配置的 highWaterMark，则返回 true 。 如果返回 false ，则应该停止向流写入数据，当可以继续写入数据到流时，会触发可写流的'drain' 事件。
+
+- 输入输出流记得关闭。
+
+pipe解决了背压问题。
+
+背压问题：数据从可读流 流向 可写流，如果上游速度快而造成数据积压。
+
+解决：可写流对象的 write(chunk) 方法接收一些数据写入流，**当内部缓冲区小于创建可写流对象时配置的 highWaterMark 则返回 true，表示数据还能处理得过来，否则返回 false 表示内部缓冲区已满或溢出，此时就是背压的一种表现**。当return false 则触发`emit.pause();`暂停可读流读取数据。等后续再触发`emit.remuse()`让可读流重新读取数据。pipe函数已经封装好了解决背压问题。
+
+如果不使用pipe，通过可写流的write来实现，则需要时刻判断write的值，为false，则需要调用可读流的pause()函数。当触发drain时，则调用可读流的resume()函数
+
+来源：
+
+https://www.nodejs.red/#/nodejs/advanced/stream-back-pressure
+
+https://blog.csdn.net/htxhtx123/article/details/106627168
+
+其他：jsonstream包处理大json文件，通过流的方式，边传输边解析，实现对大json文件的部分内容解析。
+
+### buffer
+
+用来处理二进制流数据或者与之进行交互的。用于数据传输时作为缓冲区。内存分配是在 C++ 层面完成，内存管理在 JavaScript 层面，最终还是可以被 V8 的垃圾回收标记所回收。
+
+采用了 slab 机制进行**预先申请、事后分配**，是一种动态的管理机制。
+
+```js
+//可以通过 Buffer.from()、Buffer.alloc() 与 Buffer.allocUnsafe() 三种方式来创建
+//将数据转为buffer
+const b2 = Buffer.from('10', 'utf8');
+//分配一个初始化后的buffer
+const bAlloc1 = Buffer.alloc(10);
+//分配一个未初始化的buffer，即buffer中有数据。
+const bAllocUnsafe1 = Buffer.allocUnsafe(10);
+
+```
+
+使用 Buffer.alloc(size) 传入一个指定的 size 就会申请一块固定大小的内存区域，slab 具有如下三种状态：
+
+- full：完全分配状态
+- partial：部分分配状态
+- empty：没有被分配状态
+
+//todo
 
 ### 生成器和await async
 
@@ -216,7 +269,7 @@ Where $HOME is the user's home directory, and $PREFIX is the Node.js configured 
 
 ```txt
 y文件里面引用x文件（找node_modules）
-0. 如果是系统对象，则直接返回。如果是路径(./xx/ 或者 ../xx/)则直接找文件。
+0. 如果是系统对象，则直接返回。如果是路径(./xx/ 或者 ../xx/ 或者 /xx/xx)则直接找文件。
 1. 根据y的文件路径（/xx/xx/y.js），则文件路径是 /xx1/xx2/
 2. 逐层往上找，/xx2/xx1/node_modules, /xx2/node_modules，以及GLOBAL_FOLDERS
 3. 在以上目录找
@@ -224,6 +277,33 @@ y文件里面引用x文件（找node_modules）
 ②x是文件， x，x.js，x.json，x.node 
 ③x是目录， x/package.json 的main字段，通过main字段去找index.js 文件。 如果无main字段，则直接在x/下找index.js文件
 ```
+
+- require循环引用
+
+场景：`b.js` 引用`a.js`   `a.js`引用`b.js` ，不会出现报错。
+
+当`node b.js `时，引用了a，然后执行a，a中引用b时，传给b的是一个空对象的引用，然后将a返回给b，再继续执行b的代码。等b加载完了，再对空对象进行补充。
+
+```js
+就像 有一个空对象{}，a存着这个空对象的引用，而变量b也有这个空对象的引用。因此等b加载完，只需要通过引用去修改空对象即可，则a根据引用拿到的也是被修改后的对象。
+```
+
+- module.exports 和 exports
+
+```js
+//node执行代码前会进行封装：
+(function(exports, require, module, __filename, __dirname) {
+// 模块的代码
+});
+//而两者的关系是：
+exports = module.exports = {};
+```
+
+因此如果exports={ // 代码 } ，则改变的是exports的引用，而不是修改exports这个变量所引用的对象的值。
+
+- require多次
+
+  require之后会将其缓存起来，等下其require只会从缓存中拿出，且缓存会一直占用内存，直到进程退出。一个模块的引用建议仅在头部初次加载之后使用 const 缓存起来，而不是在使用时每次都去加载一次（每次 require 都要进行路径分析、缓存判断的）
 
 ### npm i 原理
 
