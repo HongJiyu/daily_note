@@ -45,6 +45,10 @@ fn.apply(obj,[xx,xx,xx])
 fn1=fn.bind(obj); fn1(xx,xx,xx);
 ```
 
+- this是只有函数才拥有才是正规的，对象的this，一般指向全局`const obj={ this.a = 1 }`
+
+- 箭头函数里的this只与定义时的外层函数作用域的this绑定，至于外层函数的this通过什么绑定都可以。
+
 ### 原型
 
 https://blog.csdn.net/cc18868876837/article/details/81211729
@@ -284,6 +288,8 @@ y文件里面引用x文件（找node_modules）
 
 当`node b.js `时，引用了a，然后执行a，a中引用b时，传给b的是一个空对象的引用，然后将a返回给b，再继续执行b的代码。等b加载完了，再对空对象进行补充。
 
+在 a的代码上，打印引用完b之后的值，会是一个空对象。
+
 ```js
 就像 有一个空对象{}，a存着这个空对象的引用，而变量b也有这个空对象的引用。因此等b加载完，只需要通过引用去修改空对象即可，则a根据引用拿到的也是被修改后的对象。
 ```
@@ -311,7 +317,9 @@ package.json 和package-lock.json和node_modules
 
 https://www.cnblogs.com/goloving/p/14602743.html
 
-### 内存监控
+### 调试监控
+
+https://github.com/aliyun-node/Node.js-Troubleshooting-Guide
 
 - heapdump
 
