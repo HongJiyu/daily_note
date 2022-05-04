@@ -71,7 +71,7 @@ brctl show //查看网桥
 
 再来一个容器：主机上会多出一个网卡xx，同时这个xx也和docker0连在一起，同时也和新的container互连形成veth-pair。因此两个container通过docker0链接起来了，所以能够ping通。
 
-![image-20201005195647750](E:\0git_note\docker\img\image-20201005195647750.png)
+![image-20201005195647750](img\image-20201005195647750.png)
 
 而能够访问外网，是因为多了一层nat，网络地址转化，所以也能够访问外网了。
 

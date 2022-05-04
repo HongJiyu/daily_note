@@ -1,8 +1,18 @@
-未托管的pod，k8s会监控pod里面的容器，在他们失败的时候重启容器。但是整个节点失败，那么节点上的pod丢失，也不会在新的节点上创建pod。除非pod是被托管的。
+未托管的pod：直接通过kubectl create 创建pod，而不是通过replicationController或Deployment创建。
+
+k8s会监控pod（托管和未托管）里面的容器，在他们失败的时候重启容器。
+
+但是整个节点失败，那么节点上的pod丢失，也不会在新的节点上创建pod。除非pod是被托管的。
 
 # 保持pod健康
 
 k8s会对创建的pod（不管是托管还是非托管）进行监控管理，如果容器的主进程崩溃，会重启容器。
+
+## 监控的三种方法（针对容器）
+
+- 监控容器进程，如果进程崩溃则k8s会自动重启。（默认）
+- 其他：java遇到outofmemoryerrors，jvm进程会一直运行，因此k8s无法帮助重启，因此可以通过捕获这类错误并发生时退出进程。
+- 其他：如果出现无限循环或者停止响应，只能通过外部检查应用程序的运行状况。
 
 ## 存活探针
 
@@ -75,11 +85,17 @@ kubectl describe pod <podName>
 
 
 
-# Replicationcontroller
+# Replicationcontroller（针对pod）
+
+- 节点上的pod内的容器进程崩溃后自动重启，是k8s自动监控的，不管pod被托管还是未被托管。
+
+- 而节点从集群消失、pod 从 节点驱逐出，pod的扩缩容都由replicationcontroller控制。例如：某个节点消失了，节点上的pod如果是托管的，则会在其他节点上重新创建。
 
 ReplicationController会去托管pod。自动帮我们创建pod。
 
-ReplicationController 会去处理当节点宕机，会将节点所在的pod，全部在新的节点创建新的复制集。
+ReplicationController 会去处理当节点宕机，会将节点所在的pod（被托管的），全部在新的节点创建新的复制集。
+
+replicationController 是根据pod是否匹配某个标签选择器 来对其进行托管。
 
 ReplicationController 的副本个数，标签选择器、模板可以随时修改，但是只有副本数量会影响现有的pod。
 
@@ -110,7 +126,7 @@ spec:
 
 使用到了标签选择器，找到 app为web的模板，让其复制集为3。
 
-**注意**：在定义ReplicationController时可以不指定pod标签选择器，那么k8s会从pod模板提取。
+**注意**：在定义ReplicationController时可以不指定pod标签选择器，那么k8s会从pod模板提取。（如果指定错误，会无休止地创建新容器，因此不指定pod标签选择器是最好的选择）
 
 根据yaml文件创建controller
 
@@ -139,7 +155,9 @@ minikube 无法实操。因他是单节点，主节点和工作节点共用一�
 
 可以通过查看metadata.ownerReferences字段，查看一个pod属于哪一个ReplicationController。（待实操，应该是describe pod < podName>）
 
-ReplicationController是通过标签选择器来选择要控制Pod。因此想让pod脱离控制，直接修改pod的标签，而不是新增，因为controller不会去管pod是否有其他附加的标签，而是在乎pod的标签里是否存在它想要的标签。
+1. 修改已经生成的pod的标签。
+
+ReplicationController是通过标签选择器来选择要控制Pod。因此想让pod脱离控制，直接修改pod的标签，而不是新增标签，因为controller不会去管pod是否有其他附加的标签，而是在乎pod的标签里是否存在它想要的标签。
 
 ```shell
 kubectl label pod <podName> key=value #新增标签，不会对复制集产生影响
@@ -147,7 +165,15 @@ kubectl label pod <podName> key=value --overwrite
 # --overwrite必要参数，否则只是告警，因为k8s防止你想添加而无意间修改了现有标签。
 ```
 
-**注意：**如果是不是修改pod标签，而是修改controller的标签选择器，那么会导致所有的pod脱离控制，controller会建立新的pod复制集。
+2. 修改replicationController 的标签选择器。
+
+replicationController支持修改标签选择器，但是其他资源（deployment）有更好的选择，因此你永远不需要修改控制器的标签选择器。
+
+3. 修改模板上，pod的标签。
+
+`kubectl edit rc <rcName>`给模板上的pod新增标签，然后需要删除某个pod，新生成的pod才会是新的标签。
+
+**注意：**如果不是修改pod标签，而是修改controller的标签选择器，那么会导致所有的pod脱离控制，controller会建立新的pod复制集。
 
 ### 修改pod模板
 
@@ -196,6 +222,8 @@ kubectl delete rc <rcName> --cascade=false
 
 ![image-20201014231145893](img\image-20201014231145893.png)
 
+- 允许基于标签名进行筛选
+
 ```yaml
 apiVersion: v1 => apps/v1beta2
 kind: ReplicationController => ReplicaSet
@@ -239,7 +267,7 @@ selector:
         - kubia
 ```
 
-意思是：匹配标签名未app，且值必须与values（数组）中的某个元素匹配，在这里是值必须与kubia匹配。
+意思是：匹配标签名为app，且值必须与values（数组）中的某个元素匹配，在这里是值必须与kubia匹配。
 
 operator：
 
@@ -263,7 +291,7 @@ operator：
 kubectl delete rs <rsName>
 ```
 
-# DaemonSet
+# DaemonSet（略）
 
 ReplicaSet和ReplicationController只是在集群上部署特定数量的pod，如果希望pod在集群的每个节点上运行（每个节点都有一个pod实例）。
 
@@ -318,7 +346,7 @@ pod会被DaemonSet终止掉。
 
 删除DaemonSet，也会一起删除pod
 
-# 运行执行单个任务的pod
+# 运行执行单个任务的pod（略）
 
 场景：如果你需要运行一个任务，而且这个任务在完成后正常退出。比如：需要开一个任务，它负责将图片从一台服务器迁移到另一台服务器，迁移完后，任务自动结束。
 
@@ -397,7 +425,7 @@ kubectl scale job <jobName> --replicas 3
 
 spec.backoffLimit 可以配置job被标记为失败之前可以重试的次数，默认为6
 
-# CronJob
+# CronJob（略）
 
 类似定时任务的job。
 

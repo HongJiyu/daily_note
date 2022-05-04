@@ -113,6 +113,8 @@ https://www.cnblogs.com/zhujieblog/articles/13161364.html
 
 ### stream
 
+todo（有哪些流，各自的使用场景）
+
 流，用于数据传输，将数据像管道一样，一点一点地将数据传输。
 
 基础api：https://blog.csdn.net/github_38140984/article/details/83006103
@@ -138,6 +140,8 @@ https://www.nodejs.red/#/nodejs/advanced/stream-back-pressure
 https://blog.csdn.net/htxhtx123/article/details/106627168
 
 其他：jsonstream包处理大json文件，通过流的方式，边传输边解析，实现对大json文件的部分内容解析。
+
+有哪些流（todo）
 
 ### buffer
 
@@ -166,7 +170,7 @@ const bAllocUnsafe1 = Buffer.allocUnsafe(10);
 
 ### 生成器和await async
 
-### 垃圾回收
+### 内存、垃圾回收
 
 ```js
 process.memoryUsage()
@@ -178,6 +182,16 @@ max-new-space-size
 新生代和老年代 、 新生代用复制、老年代用标记清除或标记整理。
 
 验证可达性：引用技术、gcroot（todo）
+
+- nodejs12的内存大小，内存限制为2g，之前的版本是1.4g 
+
+```js
+let arr = [];
+setInterval(() => {
+    arr.push(new Array(10000000).fill(1)); // 70MB
+    console.log(Math.floor(process.memoryUsage().heapTotal/1024/1024)+"MB");
+}, 500);
+```
 
 ## 深入
 
@@ -191,8 +205,6 @@ max-new-space-size
 require("bintrees")   // 红黑树
 require('js-algorithms')   // 其他数据结构
 ```
-
-
 
 ### 异步io
 
@@ -353,6 +365,14 @@ https://www.cnblogs.com/chyingp/p/node-learning-guide-child_process.html
 
 https://blog.csdn.net/hongchh/article/details/79898816
 
+### cluster + child_process + worker_threads
+
+cluster 是在child_process的基础上封装的，而worker_threads是node12的特性，能够开启多个线程。
+
+介绍：https://www.cnblogs.com/flydean/p/14310278.html
+
+api ：http://nodejs.cn/api/worker_threads.html
+
 # koa
 
 ## 洋葱
@@ -457,3 +477,10 @@ egg-bin
 egg-xtransit
 
 alinode
+
+# 好用的插件包
+
+- readline、line-reader、linebyline  大文件逐行读 https://ccf19881030.blog.csdn.net/article/details/109222742
+- JS-Sorting-Algorithm  排序的包
+- bintrees 二叉树的包
+- js-algorithms  数据结构的包

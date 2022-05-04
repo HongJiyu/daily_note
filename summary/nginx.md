@@ -27,11 +27,11 @@ https://www.cnblogs.com/diantong/p/11208508.html
 
 权重weight
 
-iphash
+iphash （前三个地址作为hash，https://blog.csdn.net/sd4493091/article/details/54894479）
 
 urlhash
 
-参数hash 
+参数hash
 
 ## ip问题
 
@@ -62,3 +62,25 @@ $proxy_add_x_forwarded_for ： 表示将当前的`nginx` 的 `x-forward-for` 拼
 用于对url进行匹配，以便根据接口进行不同的代理。
 
 https://www.cnblogs.com/jpfss/p/10232980.html
+
+```txt
+/ 是通用匹配
+
+= 是精确匹配
+
+~ 是正则匹配
+
+！是不匹配
+
+* 是不区分大小写匹配
+```
+
+语法规则： `location [=|~|~*|^~] /uri/ { … }`
+
+- `=` 开头表示精确匹配
+- `^~` 开头表示uri以某个常规字符串开头，理解为匹配 url路径即可。nginx不对url做编码，因此请求为/static/20%/aa，可以被规则^~ /static/ /aa匹配到（注意是空格）。以xx开头
+- `~` 开头表示区分大小写的正则匹配           以xx结尾
+- `~*` 开头表示不区分大小写的正则匹配        以xx结尾
+- `!~`和`!~*`分别为区分大小写不匹配及不区分大小写不匹配 的正则
+- `/` 通用匹配，任何请求都会匹配到。
+

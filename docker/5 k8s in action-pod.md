@@ -54,6 +54,10 @@ minikube service bubia-http //获取访问服务的ip和端口
 
 ReplicationController会去管理pod，而service会创建一个恒久不变的ip对外。
 
+pod的存在是短暂的，可能会缩容或者扩容，因此会有不同的ip，因此需要服务来解决pod ip地址变化的问题。且ip是内部的，无法被外部访问到。
+
+服务用来提供静态地址，以此来为提供相同服务的pod服务。
+
 ## 4.水平扩展
 
 ```js
@@ -68,7 +72,13 @@ kubectl scale rc <rcname> --replicas=3
 
 ```js
 kubectl get pods -o wide
+kubectl describe pod  <podname>
 ```
+
+## 6. k8s 的dashboard
+
+- 使用谷歌的google kubernetes engine则可以通过`kubectl cluster-info | grep dashboard`获取dashboard的url
+- 使用minikube的dashboard，`minikube dashboard`
 
 # pod
 
@@ -84,13 +94,20 @@ kubectl get pods -o wide
 
 ​		同一个pod中的容器部分隔离，共享相同的主机名和网络接口，能够ipc进行通讯。但是容器的文件系统时完全隔离的，可以使用volume的kubenetes资源来共享文件目录。
 
+​    通俗来讲，Pod就是一组容器的集合，在Pod里面的容器共享网络/存储（Kubernetes实现共享一组的Namespace去替代每个container各自的NS，来实现这种能力），所以它们可以通过Localhost进行内部的通信。虽然网络存储都是共享的，但是CPU和Memory就不是。多容器之间可以有属于自己的Cgroup，也就是说我们可以单独的对Pod中的容器做资源（MEM/CPU）使用的限制。
+
+## pod和容器的区别
+
+按照容器的设计理念，每个容器只运行单个进程。而要想实现多个container被绑定在一起进行管理的需求。我们需要一种高级别的概念来实现这个。在kubernetes中，这就是Pod。在Pod里面，container之间可以共享网络（IP/Port）、共享存储（Volume）、共享Hostname。
+另外，Pod可以理解成一个”逻辑主机”，它与非容器领域的物理主机或者VM有着类似的行为。在同一个Pod运行的进程就像在同一物理主机或VM上运行的进程一样。只是这些进程被单独的放到单个container内。
+
 ### pod内共享ip和端口
 
 因为一个pod中的容器运行在相同的network命名空间，所以他们共享ip地址和端口。因此要注意一个pod内部的容器，不能够占用同一个端口。
 
 ### pod之间的网络
 
-k8s集群中所有的pod都在同一个共享网络地址空间中，因此每个pod都可以通过其他pod的IP地址实现互相访问。
+k8s集群中所有的pod都在同一个共享网络地址空间中，因此每个pod都可以通过其他pod的IP地址实现互相访问。这个专门的网络是由额外的软件基于真实链路实现的。
 
 ![image-20201011172724215](img\image-20201011172724215.png)
 
@@ -165,7 +182,9 @@ kubectl create -f node-web.yaml
 docker container ls -a //看不到k8s构建的容器
 ```
 
+## 查看pod
 
+`kubectl get pods`
 
 ## 查看日志
 
@@ -260,14 +279,14 @@ kubectl get pods -l env=trunk,app=web
 
 ## 将pod调度到指定节点
 
-给节点添加标签：
+给**节点**添加标签：
 
 ```shell
 kubectl label node <nodename> key=value
 kubectl label get nodes -l key=value #查看
 ```
 
-修改pod的配置
+修改pod的配置，配置nodeSelector使得这个pod调度到节点有gpu为true的节点。
 
 ```shell
 apiVersion: v1
